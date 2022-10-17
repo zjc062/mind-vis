@@ -1,8 +1,13 @@
 # Seeing Beyond the Brain: Masked Modeling Conditioned Diffusion Model for Human Vision Decoding
 
-[Paper], [Bibtex], [Supplementary], [Code]
+Author 1, Author 2, ..., Author N
+
+[Paper], [Bibtex], [Supplementary], [Code](https://github.com/zjc062/mind-vis)
 
 ## Overview
+![Decoding Seen Images from Brain Activities.](figures/first_figure.png)
+
+## Abstract
 
 Decoding visual stimuli from brain recordings aims to deepen our understanding of the human visual system and build a solid foundation for bridging human and computer vision through the Brain-Computer Interface. 
 However, due to the scarcity of data annotations and the complexity of underlying brain information, it is challenging to decode images with faithful details and meaningful semantics. 
@@ -13,3 +18,4 @@ We benchmarked our model qualitatively and quantitatively; the experimental resu
 Exhaustive ablation studies are conducted to analyze our framework. 
 
 
+## MinD-Vis Framework
