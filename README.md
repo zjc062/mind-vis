@@ -5,7 +5,7 @@ Author 1, Author 2, ..., Author N
 [Paper], [Bibtex], [Supplementary], [Code](https://github.com/zjc062/mind-vis)
 
 ## Overview
-![Decoding Seen Images from Brain Activities.](figures/first_figure.png)
+![Decoding Seen Images from Brain Activities.](/home/zijiao/Desktop/Zijiao/mind-vis-project/mind-vis/figures/first_figure.png)
 
 ## Abstract
 
