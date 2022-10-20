@@ -1,13 +1,13 @@
 import os, sys
 sys.path.insert(0,'.')
-sys.path.insert(0,'./src')
-sys.path.insert(0,'./src/mae')
-sys.path.insert(0,'./src/ldm')
+sys.path.insert(0,'./code')
+sys.path.insert(0,'./code/sc_mbm')
+sys.path.insert(0,'./code/dc_ldm')
 import numpy as np
 import torch
-from src.eval_metrics import get_similarity_metric
-from src.dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset
-from src.ldm.ldm_for_fmri import fLDM
+from eval_metrics import get_similarity_metric
+from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset
+from dc_ldm.ldm_for_fmri import fLDM
 from einops import rearrange
 from PIL import Image
 import torchvision.transforms as transforms

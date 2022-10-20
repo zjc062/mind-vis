@@ -1,16 +1,16 @@
 import os, sys
 sys.path.insert(0,'.')
-sys.path.insert(0,'./src/mae')
+sys.path.insert(0,'./code/sc_mbm')
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel
 from config import Config_MAE_fMRI, Config_MAE_finetune
-from src.dataset import hcp_dataset, create_Kamitani_dataset, create_BOLD5000_dataset
-from src.mae.mae_for_fmri import MAEforFMRI
-from src.mae.trainer import train_one_epoch
-from src.mae.trainer import NativeScalerWithGradNormCount as NativeScaler
-from src.mae.utils import save_model
+from dataset import hcp_dataset, create_Kamitani_dataset, create_BOLD5000_dataset
+from sc_mbm.mae_for_fmri import MAEforFMRI
+from sc_mbm.trainer import train_one_epoch
+from sc_mbm.trainer import NativeScalerWithGradNormCount as NativeScaler
+from sc_mbm.utils import save_model
 import argparse
 import time
 import timm.optim.optim_factory as optim_factory

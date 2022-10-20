@@ -1,16 +1,16 @@
 import os, sys
 sys.path.insert(0,'.')
-sys.path.insert(0,'./src/mae')
+sys.path.insert(0,'./code/sc_mbm')
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel
 from config import Config_MAE_fMRI
-from src.dataset import hcp_dataset, Kamitani_pretrain_dataset
-from src.mae.mae_for_fmri import MAEforFMRI
-from src.mae.trainer import train_one_epoch
-from src.mae.trainer import NativeScalerWithGradNormCount as NativeScaler
-from src.mae.utils import save_model
+from dataset import hcp_dataset, Kamitani_pretrain_dataset
+from sc_mbm.mae_for_fmri import MAEforFMRI
+from sc_mbm.trainer import train_one_epoch
+from sc_mbm.trainer import NativeScalerWithGradNormCount as NativeScaler
+from sc_mbm.utils import save_model
 import argparse
 import time
 import timm.optim.optim_factory as optim_factory
@@ -121,7 +121,6 @@ def main(config):
                 transform=fmri_transform, aug_times=config.aug_times, num_sub_limit=config.num_sub_limit, 
                 include_kam=config.include_kam, include_shen=config.include_shen, include_hcp=config.include_hcp)
    
-
     print(f'Dataset size: {len(dataset_pretrain)}\nNumber of voxels: {dataset_pretrain.num_voxels}')
     sampler = torch.utils.data.DistributedSampler(dataset_pretrain, rank=config.local_rank) if torch.cuda.device_count() > 1 else None 
 

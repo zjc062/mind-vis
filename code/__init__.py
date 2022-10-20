@@ -1,2 +1,2 @@
-import src
+import code
 print('here')

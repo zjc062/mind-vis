@@ -1,16 +1,16 @@
 import os, sys
 sys.path.insert(0,'.')
-sys.path.insert(0,'./src')
-sys.path.insert(0,'./src/mae')
-sys.path.insert(0,'./src/ldm')
+sys.path.insert(0,'./code')
+sys.path.insert(0,'./code/sc_mbm')
+sys.path.insert(0,'./code/dc_ldm')
 import numpy as np
 import torch
 from torch.utils.data import DataLoader
 import torch.nn as nn
 from config import Config_Generative_Model
-from src.dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset, create_BOLD5000_dataset
-from src.mae.mae_for_fmri import fmri_encoder
-from src.ldm.ldm_for_fmri import fLDM
+from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset, create_BOLD5000_dataset
+from sc_mbm.mae_for_fmri import fmri_encoder
+from dc_ldm.ldm_for_fmri import fLDM
 import argparse
 import datetime
 import wandb
@@ -20,7 +20,7 @@ from PIL import Image
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
 from pytorch_lightning.callbacks import StochasticWeightAveraging
-from src.eval_metrics import get_similarity_metric
+from eval_metrics import get_similarity_metric
 import copy
 
 def to_image(img):
