@@ -19,6 +19,13 @@ import matplotlib.pyplot as plt
 import wandb
 import copy
 
+# clean all wandb logs
+def clean_wandb():
+    api = wandb.Api()
+    runs = api.runs("mae_pretrain_fmri")
+    for run in runs:
+        run.delete()
+
 os.environ["WANDB_START_METHOD"] = "thread"
 os.environ['WANDB_DIR'] = "."
 
