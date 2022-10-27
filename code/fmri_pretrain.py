@@ -27,7 +27,6 @@ class wandb_logger:
         wandb.init(project="stageA_sc-mbm",
                     anonymous="allow",
                     group=config.group_name,
-                    # entity=config.wandb_account,
                     config=config,
                     reinit=True)
 
@@ -58,10 +57,8 @@ def get_args_parser():
     
     # Training Parameters
     parser.add_argument('--lr', type=float)
-    parser.add_argument('--min_lr', type=float)
     parser.add_argument('--weight_decay', type=float)
     parser.add_argument('--num_epoch', type=int)
-    parser.add_argument('--warmup_epochs', type=int)
     parser.add_argument('--batch_size', type=int)
 
     # Model Parameters
@@ -70,18 +67,27 @@ def get_args_parser():
     parser.add_argument('--embed_dim', type=int)
     parser.add_argument('--decoder_embed_dim', type=int)
     parser.add_argument('--depth', type=int)
-    parser.add_argument('--decoder_depth', type=int)
     parser.add_argument('--num_heads', type=int)
     parser.add_argument('--decoder_num_heads', type=int)
-    parser.add_argument('--accum_iter', type=int)
+    parser.add_argument('--mlp_ratio', type=float)
 
     # Project setting
     parser.add_argument('--root_path', type=str)
+    parser.add_argument('--output_path', type=str)
     parser.add_argument('--seed', type=str)
+    parser.add_argument('--roi', type=str)
+    parser.add_argument('--aug_times', type=int)
+    parser.add_argument('--num_sub_limit', type=int)
+    parser.add_argument('--group_name', type=str)
+
+    parser.add_argument('--include_hcp', type=bool)
+    parser.add_argument('--include_kam', type=bool)
+    parser.add_argument('--include_shen', type=bool)
+
+    parser.add_argument('--use_nature_img_loss', type=bool)
+    parser.add_argument('--img_recon_weight', type=float)
     
     # distributed training parameters
-    parser.add_argument('--world_size', default=1, type=int,
-                        help='number of distributed processes')
     parser.add_argument('--local_rank', type=int)
                         
     return parser
@@ -111,12 +117,10 @@ def main(config):
         create_readme(config, output_path)
     
     device = torch.device(f'cuda:{config.local_rank}') if torch.cuda.is_available() else torch.device('cpu')
-    # device = torch.device('cpu')
     torch.manual_seed(config.seed)
     np.random.seed(config.seed)
 
     # create dataset and dataloader
-    
     dataset_pretrain = hcp_dataset(path=os.path.join(config.root_path, 'data/HCP/npz'), roi=config.roi, patch_size=config.patch_size,
                 transform=fmri_transform, aug_times=config.aug_times, num_sub_limit=config.num_sub_limit, 
                 include_kam=config.include_kam, include_shen=config.include_shen, include_hcp=config.include_hcp)
@@ -239,10 +243,3 @@ if __name__ == '__main__':
     config = update_config(args, config)
     main(config)
     
-
-
-
-
-
-
-

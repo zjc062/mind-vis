@@ -39,7 +39,7 @@ def create_fmri_latents_from_dataset(dataset):
             dataset.naive_label, dataset.fmri_transform, dataset.image_transform, dataset.num_per_sub)
     return latent_dataset
 def wandb_init(config):
-    wandb.init( project="image_generation",
+    wandb.init( project="stageB_dc-ldm",
                 group='eval',
                 anonymous="allow",
                 config=config,

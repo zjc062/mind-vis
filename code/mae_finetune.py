@@ -54,25 +54,26 @@ class wandb_logger:
 
 def get_args_parser():
     parser = argparse.ArgumentParser('MAE finetuning on Test fMRI', add_help=False)
-    
+
     # Training Parameters
     parser.add_argument('--lr', type=float)
-    parser.add_argument('--min_lr', type=float)
     parser.add_argument('--weight_decay', type=float)
     parser.add_argument('--num_epoch', type=int)
-    parser.add_argument('--warmup_epochs', type=int)
     parser.add_argument('--batch_size', type=int)
-
-    # Model Parameters
     parser.add_argument('--mask_ratio', type=float)
-    parser.add_argument('--accum_iter', type=int)
 
     # Project setting
     parser.add_argument('--root_path', type=str)
+    parser.add_argument('--output_path', type=str)
+    parser.add_argument('--pretrain_mae_path', type=str)
+    parser.add_argument('--kam_path', type=str)
+    parser.add_argument('--bold5000_path', type=str)
+    parser.add_argument('--dataset', type=str)
+    parser.add_argument('--include_nonavg_test', type=bool)
+    
+    parser.add_argument('--group_name', type=str)    
     
     # distributed training parameters
-    parser.add_argument('--world_size', default=1, type=int,
-                        help='number of distributed processes')
     parser.add_argument('--local_rank', type=int)
                         
     return parser
@@ -227,10 +228,3 @@ if __name__ == '__main__':
     config = update_config(args, config)
     main(config)
     
-
-
-
-
-
-
-

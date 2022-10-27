@@ -9,12 +9,9 @@ class Config_MAE_fMRI:
     # MAE for fMRI
         # Training Parameters
         self.lr = 2.5e-4
-        self.min_lr = 0.
         self.weight_decay = 0.05
         self.num_epoch = 300
-        self.warmup_epochs = 40
         self.batch_size = 50
-        self.clip_grad = 0.8
         
         # Model Parameters
         self.mask_ratio = 0.35
@@ -22,19 +19,16 @@ class Config_MAE_fMRI:
         self.embed_dim = 1024 # has to be a multiple of num_heads
         self.decoder_embed_dim = 512
         self.depth = 24
-        self.decoder_depth = 8
         self.num_heads = 16
         self.decoder_num_heads = 16
         self.mlp_ratio = 1.0
-        self.focus_range = None # [0, 1500] # None to disable it
-        self.focus_rate = 0.6
+
         # Project setting
         self.root_path = './mind-vis'
         self.output_path = './mind-vis/results'
         self.seed = 2022
         self.roi = 'VC'
         self.aug_times = 1
-        self.accum_iter = 1 # Accumulate gradient iterations (for increasing the effective batch size under memory constraints)
         self.num_sub_limit = None
         self.group_name = 'patch_size'
 
@@ -44,17 +38,23 @@ class Config_MAE_fMRI:
         
         self.use_nature_img_loss = False
         self.img_recon_weight = 0.5
-        # optua setting
-        self.trial_numer = 0
-        self.trial = None
 
         # distributed training
-        self.world_size = 1
         self.local_rank = 0
 
 class Config_MAE_finetune:
     def __init__(self):
+
+        # Training Parameters
+        self.lr = 5.3e-5
+        self.weight_decay = 0.05
+        self.num_epoch = 15
+        self.batch_size = 16 if self.dataset == 'Kamitani_2017' else 4 
+        self.mask_ratio = 0.75 
+
+        # Project setting
         self.root_path = './mind-vis'
+        self.output_path = '..'
         self.pretrain_mae_path = os.path.join(self.root_path, 'pretrains/fmri_pretrain/checkpoints/checkpoint.pth') 
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
         self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
@@ -63,21 +63,9 @@ class Config_MAE_finetune:
         self.kam_subs = ['sbj_3']
         self.bold5000_subs = ['CSI4']
 
-        self.lr = 5.3e-5
-        self.min_lr = 0.
-        self.batch_size = 16 if self.dataset == 'Kamitani_2017' else 4 
-        self.num_epoch = 15
-        self.mask_ratio = 0.75 
-        self.warmup_epochs = 2
-
+        # distributed training
         self.local_rank = 0
-        self.output_path = '..'
-        self.weight_decay = 0.05
-        self.accum_iter = 1
-        self.clip_grad = 0.8
-        self.world_size = 1
-
-
+        
 class Config_Generative_Model:
     def __init__(self):
         # project parameters

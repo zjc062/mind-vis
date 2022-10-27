@@ -5,7 +5,6 @@ sys.path.insert(0,'./code/sc_mbm')
 sys.path.insert(0,'./code/dc_ldm')
 import numpy as np
 import torch
-from torch.utils.data import DataLoader
 import torch.nn as nn
 from config import Config_Generative_Model
 from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset, create_BOLD5000_dataset
@@ -19,9 +18,20 @@ from einops import rearrange
 from PIL import Image
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
-from pytorch_lightning.callbacks import StochasticWeightAveraging
 from eval_metrics import get_similarity_metric
 import copy
+
+
+def wandb_init(config, output_path):
+    wandb.init( project="stageB_dc-ldm",
+                group=config.group_name,
+                anonymous="allow",
+                config=config,
+                reinit=True)
+    create_readme(config, output_path)
+
+def wandb_finish():
+    wandb.finish()
 
 def to_image(img):
     if img.shape[-1] != 3:
@@ -98,10 +108,6 @@ def generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_d
         metric_dict = {f'summary/pair-wise_{k}_{sub}':v for k, v in zip(metric_list[:-1], metric[:-1])}
         metric_dict[f'summary/{metric_list[-1]}_{sub}'] = metric[-1]
         wandb.log(metric_dict)
-
-        # metric, metric_list = get_eval_metric(samples, method='n-way', n=2, n_trials=100)
-        # metric_dict = {f'summary/2way_{k}_{sub}':v for k, v in zip(metric_list, metric)}
-        # wandb.log(metric_dict)
 
 def normalize(img):
     if img.shape[-1] == 3:
@@ -196,25 +202,40 @@ def get_args_parser():
     parser = argparse.ArgumentParser('MAE pre-training for fMRI', add_help=False)
     # project parameters
     parser.add_argument('--seed', type=int)
+    parser.add_argument('--root_path', type=str)
     parser.add_argument('--kam_path', type=str)
-    parser.add_argument('--pretrain_mae_path', type=str)
+    parser.add_argument('--bold5000_path', type=str)
     parser.add_argument('--roi', type=str)
     parser.add_argument('--patch_size', type=int)
+    parser.add_argument('--pretrain_mae_path', type=str)
+    parser.add_argument('--img_size', type=int)
+    parser.add_argument('--crop_ratio', type=float)
+
 
     # finetune parameters
-    parser.add_argument('--batch_size', type=int)
-    parser.add_argument('--lr', type=float)
-    parser.add_argument('--num_epoch', type=int)
+    parser.add_argument('--batch_size1', type=int)
+    parser.add_argument('--lr1', type=float)
+    parser.add_argument('--num_epoch_1', type=int)
+    parser.add_argument('--precision', type=int)
+    parser.add_argument('--accumulate_grad', type=int)
+    parser.add_argument('--mask_ratio', type=float)
+    parser.add_argument('--global_pool', type=bool)
 
     # diffusion sampling parameters
+    parser.add_argument('--pretrain_gm_path', type=str)
+    parser.add_argument('--dataset', type=str)
+
+    parser.add_argument('--group_name', type=str)
     parser.add_argument('--num_samples', type=int)
     parser.add_argument('--ddim_steps', type=int)
     parser.add_argument('--scale', type=float)
     parser.add_argument('--ddim_eta', type=float)
 
+    parser.add_argument('--use_time_cond', type=bool)
+    parser.add_argument('--eval_avg', type=bool)
+
+
     # distributed training parameters
-    parser.add_argument('--world_size', default=1, type=int,
-                        help='number of distributed processes')
     parser.add_argument('--local_rank', type=int)
 
     return parser
@@ -231,17 +252,6 @@ def create_readme(config, path):
     with open(os.path.join(path, 'README.md'), 'w+') as f:
         print(config.__dict__, file=f)
 
-
-def wandb_init(config, output_path):
-    wandb.init( project="image_generation",
-                group=config.group_name,
-                entity="jqing", 
-                config=config,
-                reinit=True)
-    create_readme(config, output_path)
-
-def wandb_finish():
-    wandb.finish()
 
 def create_trainer(num_epoch, precision=32, accumulate_grad_batches=2,logger=None,check_val_every_n_epoch=0):
     acc = 'gpu' if torch.cuda.is_available() else 'cpu'
@@ -263,8 +273,7 @@ if __name__ == '__main__':
         config.checkpoint_path = ckp
         print('Resuming from checkpoint: {}'.format(config.checkpoint_path))
 
-    # config.local_rank = int(os.environ('LOCAL_RANK')) if 'LOCAL_RANK' in os.environ else 0
-    output_path = os.path.join(config.root_path, 'results', 'generation',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H:%M:%S")))
+    output_path = os.path.join(config.root_path, 'results', 'generation',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     config.output_path = output_path
     os.makedirs(output_path, exist_ok=True)
     
@@ -279,10 +288,3 @@ if __name__ == '__main__':
     main(config)
     if config.local_rank == 0:
         wandb_finish()
-    
-        
-
-
-
-
-    
