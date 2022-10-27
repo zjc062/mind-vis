@@ -19,21 +19,15 @@ import matplotlib.pyplot as plt
 import wandb
 import copy
 
-# clean all wandb logs
-def clean_wandb():
-    api = wandb.Api()
-    runs = api.runs("mae_pretrain_fmri")
-    for run in runs:
-        run.delete()
-
 os.environ["WANDB_START_METHOD"] = "thread"
 os.environ['WANDB_DIR'] = "."
 
 class wandb_logger:
     def __init__(self, config):
-        wandb.init(project="fmri-reconst",
+        wandb.init(project="stageA_sc-mbm",
+                    anonymous="allow",
                     group=config.group_name,
-                    entity="jqing",  # NOTE: this entity depends on your wandb account.
+                    # entity=config.wandb_account,
                     config=config,
                     reinit=True)
 
@@ -58,7 +52,6 @@ class wandb_logger:
 
     def finish(self):
         wandb.finish(quiet=True)
-
 
 def get_args_parser():
     parser = argparse.ArgumentParser('MAE pre-training for fMRI', add_help=False)
@@ -109,7 +102,7 @@ def main(config):
     if torch.cuda.device_count() > 1:
         torch.cuda.set_device(config.local_rank) 
         torch.distributed.init_process_group(backend='nccl')
-    output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H:%M:%S")))
+    output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
     
@@ -225,7 +218,7 @@ def plot_recon_figures(model, device, dataset, output_path, num_figures = 5, con
         ax[2].set_ylabel('cor: %.4f'%cor, weight = 'bold')
         ax[2].yaxis.set_label_position("right")
 
-    fig_name = 'reconst-%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H:%M:%S"))
+    fig_name = 'reconst-%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S"))
     fig.savefig(os.path.join(output_path, f'{fig_name}.png'))
     if logger is not None:
         logger.log_image('reconst', fig)

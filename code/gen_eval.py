@@ -6,7 +6,7 @@ sys.path.insert(0,'./code/dc_ldm')
 import numpy as np
 import torch
 from eval_metrics import get_similarity_metric
-from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset
+from dataset import create_Kamitani_dataset, fmri_latent_dataset
 from dc_ldm.ldm_for_fmri import fLDM
 from einops import rearrange
 from PIL import Image
@@ -41,7 +41,7 @@ def create_fmri_latents_from_dataset(dataset):
 def wandb_init(config):
     wandb.init( project="image_generation",
                 group='eval',
-                entity="jqing", 
+                anonymous="allow",
                 config=config,
                 reinit=True)
 
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     print(config.__dict__)
 
     output_path = os.path.join(config.root_path, 'results', 'eval',  
-                    '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H:%M:%S")))
+                    '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 

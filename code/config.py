@@ -1,31 +1,9 @@
 import os
 import numpy as np
-class Config_MAE_finetune:
-    def __init__(self):
-        self.root_path = '/home/zijiao/Desktop/Zijiao/side_project/fmri-image-reconstruction'
-        self.pretrain_mae_path = os.path.join(self.root_path, 'results/fmri_pretrain/15-10-2022-15:30:13/checkpoints/checkpoint.pth') 
-        self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
-        self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
-        self.dataset = 'Kamitani_2017' # Kamitani_2017 or Shen_2019 or BOLD5000
-        self.include_nonavg_test = True
-        self.kam_subs = ['sbj_3']
-        self.bold5000_subs = ['CSI4']
 
-        self.lr = 5.3e-5
-        self.min_lr = 0.
-        self.batch_size = 16 if self.dataset == 'Kamitani_2017' else 4 
-        self.num_epoch = 15
-        self.mask_ratio = 0.75 
-        self.warmup_epochs = 2
-
-        self.local_rank = 0
-        self.output_path = '..'
-        self.weight_decay = 0.05
-        self.accum_iter = 1
-        self.clip_grad = 0.8
-        self.world_size = 1
 
 class Config_MAE_fMRI:
+    # configs for fmri_pretrain.py
     def __init__(self):
     # --------------------------------------------
     # MAE for fMRI
@@ -51,9 +29,8 @@ class Config_MAE_fMRI:
         self.focus_range = None # [0, 1500] # None to disable it
         self.focus_rate = 0.6
         # Project setting
-        # self.root_path = '/home/jack/Desktop/fmri_reconst'
-        self.root_path = '/home/zijiao/Desktop/Zijiao/side_project/fmri-image-reconstruction'
-        self.output_path = '..'
+        self.root_path = './mind-vis'
+        self.output_path = './mind-vis/results'
         self.seed = 2022
         self.roi = 'VC'
         self.aug_times = 1
@@ -75,13 +52,37 @@ class Config_MAE_fMRI:
         self.world_size = 1
         self.local_rank = 0
 
+class Config_MAE_finetune:
+    def __init__(self):
+        self.root_path = './mind-vis'
+        self.pretrain_mae_path = os.path.join(self.root_path, 'pretrains/fmri_pretrain/checkpoints/checkpoint.pth') 
+        self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
+        self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
+        self.dataset = 'Kamitani_2017' # Kamitani_2017 or Shen_2019 or BOLD5000
+        self.include_nonavg_test = True
+        self.kam_subs = ['sbj_3']
+        self.bold5000_subs = ['CSI4']
+
+        self.lr = 5.3e-5
+        self.min_lr = 0.
+        self.batch_size = 16 if self.dataset == 'Kamitani_2017' else 4 
+        self.num_epoch = 15
+        self.mask_ratio = 0.75 
+        self.warmup_epochs = 2
+
+        self.local_rank = 0
+        self.output_path = '..'
+        self.weight_decay = 0.05
+        self.accum_iter = 1
+        self.clip_grad = 0.8
+        self.world_size = 1
+
+
 class Config_Generative_Model:
     def __init__(self):
         # project parameters
         self.seed = 2022
-        # self.root_path = '/home/jack/Desktop/fmri_reconst'
-        self.root_path = '/mnt/isilon/CSC4/HelenZhouLab/HZLHD1/Data4/Members/Zijiao/side_project/fmri-image-reconstruction'
-        # self.root_path = '/home/zijiao/Desktop/Zijiao/side_project/fmri-image-reconstruction'
+        self.root_path = './mind-vis'
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
         self.shen_path = os.path.join(self.root_path, 'data/Shen_2019/npz')
         self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')

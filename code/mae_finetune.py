@@ -24,9 +24,9 @@ os.environ['WANDB_DIR'] = "."
 
 class wandb_logger:
     def __init__(self, config):
-        wandb.init(project="fmri-reconst",
+        wandb.init(project="step1_sc-mbm",
                     group='finetune_more',
-                    entity="jqing",  # NOTE: this entity depends on your wandb account.
+                    anonymous="allow",
                     config=config,
                     reinit=True)
 
@@ -96,7 +96,7 @@ def main(config):
     sd = torch.load(config.pretrain_mae_path, map_location='cpu')
     config_pretrain = sd['config']
     
-    output_path = os.path.join(config.root_path, 'results', 'mae_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H:%M:%S")))
+    output_path = os.path.join(config.root_path, 'results', 'mae_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
     
@@ -207,7 +207,7 @@ def plot_recon_figures(model, device, dataset, output_path, num_figures = 5, con
         ax[2].set_ylabel('cor: %.4f'%cor, weight = 'bold')
         ax[2].yaxis.set_label_position("right")
 
-    fig_name = 'reconst-%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H:%M:%S"))
+    fig_name = 'reconst-%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S"))
     fig.savefig(os.path.join(output_path, f'{fig_name}.png'))
     if logger is not None:
         logger.log_image('reconst', fig)

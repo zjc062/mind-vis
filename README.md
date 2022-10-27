@@ -1,8 +1,5 @@
 # Seeing Beyond the Brain: Masked Modeling Conditioned Diffusion Model for Human Vision Decoding
 
-Author 1, Author 2, ..., Author N
-
-[Paper], [Bibtex], [Supplementary], [Code](https://github.com/zjc062/mind-vis)
 
 ## Overview
 ![Decoding Seen Images from Brain Activities.](/home/zijiao/Desktop/Zijiao/mind-vis-project/mind-vis/figures/first_figure.png)
