@@ -10,8 +10,8 @@ Decoding visual stimuli from brain recordings aims to deepen our understanding o
 
 ## Overview
 Our framework consists of two main stages:
-- Sparse-Coded Masked Brain Modelling *(SC-MBM)*
-- Double-Conditioned Latent Diffusion Model *(DC-LDM)*
+- Stage A: Sparse-Coded Masked Brain Modelling (*SC-MBM*)
+- Stage B: Double-Conditioned Latent Diffusion Model (*DC-LDM*)
 
 File path | Description
 ```
