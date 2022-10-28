@@ -4,7 +4,14 @@
 ## Overview
 ![Decoding Seen Images from Brain Activities.](/home/zijiao/Desktop/Zijiao/mind-vis-project/mind-vis/figures/first_figure.png)
 
-## Abstract
+## Requirements
+
+A suitable conda environment named **mind_vis** can be created and activated with:
+
+conda env create -f environment.yml
+conda activate mind_vis
+
+
 
 Decoding visual stimuli from brain recordings aims to deepen our understanding of the human visual system and build a solid foundation for bridging human and computer vision through the Brain-Computer Interface. 
 However, due to the scarcity of data annotations and the complexity of underlying brain information, it is challenging to decode images with faithful details and meaningful semantics. 

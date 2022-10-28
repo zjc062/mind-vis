@@ -1,15 +1,6 @@
 import os, sys
-sys.path.insert(0,'.')
-sys.path.insert(0,'./code')
-sys.path.insert(0,'./code/sc_mbm')
-sys.path.insert(0,'./code/dc_ldm')
 import numpy as np
 import torch
-import torch.nn as nn
-from config import Config_Generative_Model
-from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset, create_BOLD5000_dataset
-from sc_mbm.mae_for_fmri import fmri_encoder
-from dc_ldm.ldm_for_fmri import fLDM
 import argparse
 import datetime
 import wandb
@@ -18,8 +9,17 @@ from einops import rearrange
 from PIL import Image
 import pytorch_lightning as pl
 from pytorch_lightning.loggers import WandbLogger
-from eval_metrics import get_similarity_metric
 import copy
+
+# own code
+sys.path.insert(0,'.')
+sys.path.insert(0,'./code')
+sys.path.insert(0,'./code/sc_mbm')
+sys.path.insert(0,'./code/dc_ldm')
+from config import Config_Generative_Model
+from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset, create_BOLD5000_dataset
+from dc_ldm.ldm_for_fmri import fLDM
+from eval_metrics import get_similarity_metric
 
 
 def wandb_init(config, output_path):
@@ -140,7 +140,7 @@ def main(config):
 
     # prepare dataset
     # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                 std=[0.229, 0.224, 0.225])
+    #                                   std=[0.229, 0.224, 0.225])
 
     crop_pix = int(config.crop_ratio*config.img_size)
     img_transform_train = transforms.Compose([
@@ -210,6 +210,7 @@ def get_args_parser():
     parser.add_argument('--pretrain_mae_path', type=str)
     parser.add_argument('--img_size', type=int)
     parser.add_argument('--crop_ratio', type=float)
+    parser.add_argument('--group_name', type=str)
 
 
     # finetune parameters
@@ -224,13 +225,10 @@ def get_args_parser():
     # diffusion sampling parameters
     parser.add_argument('--pretrain_gm_path', type=str)
     parser.add_argument('--dataset', type=str)
-
-    parser.add_argument('--group_name', type=str)
     parser.add_argument('--num_samples', type=int)
     parser.add_argument('--ddim_steps', type=int)
     parser.add_argument('--scale', type=float)
     parser.add_argument('--ddim_eta', type=float)
-
     parser.add_argument('--use_time_cond', type=bool)
     parser.add_argument('--eval_avg', type=bool)
 
