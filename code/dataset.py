@@ -91,7 +91,7 @@ def channel_first(img):
 
 class hcp_dataset(Dataset):
     def __init__(self, path='../data/HCP/npz', roi='VC', patch_size=16, transform=identity, aug_times=2, 
-                num_sub_limit=None, include_kam=False, include_shen=False, include_hcp=True):
+                num_sub_limit=None, include_kam=False, include_hcp=True):
         super(hcp_dataset, self).__init__()
         data = []
         images = []
@@ -122,20 +122,6 @@ class hcp_dataset(Dataset):
             else:
                 data = k.data
             images += k.images
-            
-        if include_shen:
-            kam_path = os.path.join(str(Path(path).parent.parent), 'Kamitani', 'npz')
-            shen_path = os.path.join(str(Path(path).parent.parent), 'Shen_2019', 'npz')
-            shen, _ = create_Shen2019_dataset(shen_path, kam_path, roi, patch_size, transform)
-            if len(data) != 0:
-                padding_len = max([data.shape[-1],  shen.fmri.shape[-1]])
-                data = pad_to_length(data, padding_len)
-                data_s = pad_to_length(shen.fmri, padding_len)
-                data = np.concatenate([data, data_s], axis=0)
-                images += [None] * len(data_s)
-            else:
-                data = shen.fmri
-                images += [None] * len(data)
 
         assert len(data) != 0, 'No data found'
         
@@ -388,18 +374,6 @@ class fmri_latent_dataset(Dataset):
         else:
             return {'fmri': self.fmri_transform(fmri), 
                     'image': self.image_transform(img)}
-    
-    def get_pos(self, label):
-        same_lbs = [i for i, lb in enumerate(self.naive_label) if lb == label]
-        selected_lb = same_lbs[np.random.choice(len(same_lbs), 1)[0]]
-        fmri = self.fmri_latent[self.start_pointer:self.end_pointer, ...][selected_lb]
-        return self.fmri_transform(fmri)
-
-    def get_neg(self, label):
-        same_lbs = [i for i, lb in enumerate(self.naive_label) if lb != label]
-        selected_lb = same_lbs[np.random.choice(len(same_lbs), 1)[0]]
-        fmri = self.fmri_latent[self.start_pointer:self.end_pointer, ...][selected_lb]
-        return self.fmri_transform(fmri)
 
     def switch_sub_view(self, sub, subs):
         self.start_pointer = subs.index(sub) * self.num_per_sub
@@ -435,83 +409,6 @@ def remove_repeats(fmri, img_lb):
         lbs.append(k)
         fmris.append(np.mean(np.stack(v), axis=0))
     return np.stack(fmris), lbs
-
-def create_Shen2019_dataset(path='../data/Shen_2019/npz', image_path='../data/Kamitani/npz',  roi='VC', patch_size=16, fmri_transform=identity,
-            image_transform=identity, subjects = ['sub-01', 'sub-02', 'sub-03']):
-
-    img_npz = dict(np.load(os.path.join(image_path, 'images_500.npz')))
-    
-    with open(os.path.join(image_path, 'imagenet_training_label.csv'), 'r') as f:
-        csvreader = csv.reader(f)
-        img_training_filename = [row[-1].split('.')[0].replace('\"', '') for row in csvreader]
-
-    with open(os.path.join(image_path, 'imagenet_testing_label.csv'), 'r') as f:
-        csvreader = csv.reader(f)
-        img_testing_filename = [row[-1].split('.')[0].replace('\"', '') for row in csvreader]
-
-    train_img_label = []
-    test_img_label = []
-    train_fmri = []
-    test_fmri = []
-    for sub in subjects:
-        train_npz = dict(np.load(os.path.join(path, f'{sub}_train.npz'), allow_pickle=True))
-        test_npz = dict(np.load(os.path.join(path, f'{sub}_test.npz'), allow_pickle=True))
-        train_img_label += [img_training_filename.index(n) for n in train_npz['pic_name']]
-        tr = np.concatenate([train_npz['V1'],train_npz['V2'],train_npz['V3'],train_npz['V4']], 
-                        axis=-1) if roi == 'VC' else train_npz[roi] # 6000, num_voxels
-
-        test_img_lb = [img_testing_filename.index(n) for n in test_npz['pic_name']]
-        tt = np.concatenate([test_npz['V1'],test_npz['V2'],test_npz['V3'],test_npz['V4']],
-                        axis=-1) if roi == 'VC' else test_npz[roi] # 1200, num_voxels
-        tt, test_img_lb = remove_repeats(tt, test_img_lb)
-        test_img_label += test_img_lb
-        tr = normalize(pad_to_patch_size(tr, patch_size))
-        tt = normalize(pad_to_patch_size(tt, patch_size), np.mean(tr), np.std(tr))
-        train_fmri.append(tr)
-        test_fmri.append(tt)
-
-    train_fmri = np.concatenate(train_fmri, axis=0)
-    test_fmri = np.concatenate(test_fmri, axis=0)
-    num_voxels = train_fmri.shape[-1]
-
-    if isinstance(image_transform, list):
-        return (Shen2019_dataset(train_fmri, img_npz['train_images'], train_img_label, fmri_transform, image_transform[0], num_voxels, len(train_npz['V1'])), 
-                Shen2019_dataset(test_fmri, img_npz['test_images'], test_img_label, fmri_transform, image_transform[1], num_voxels, len(test_npz['V1']))) 
-    else:
-        return (Shen2019_dataset(train_fmri, img_npz['train_images'], train_img_label, fmri_transform, image_transform, num_voxels, len(train_npz['V1'])), 
-                    Shen2019_dataset(test_fmri, img_npz['test_images'], test_img_label, fmri_transform, image_transform, num_voxels, len(test_npz['V1']))) 
-
-class Shen2019_dataset(Dataset):
-    def __init__(self, fmri, image, img_label, fmri_transform=identity, image_transform=identity, num_voxels=0, num_per_sub=50):
-        super(Shen2019_dataset, self).__init__()
-        assert len(fmri) == len(img_label), 'len error'
-        fmri = np.expand_dims(fmri, axis=1)
-        self.fmri = fmri
-        self.image = image
-        self.image_label = img_label
-        self.fmri_transform = fmri_transform
-        self.image_transform = image_transform
-        self.num_voxels = num_voxels
-        self.num_per_sub = num_per_sub
-        
-        self.start_pointer = 0
-        self.end_pointer = len(fmri)
-        self.num_per_sub = num_per_sub
-
-    def __len__(self):
-        return len(self.fmri)
-    
-    def __getitem__(self, index):
-        fmri = self.fmri[self.start_pointer:self.end_pointer][index]
-        img = self.image[self.image_label[self.start_pointer:self.end_pointer][index]]
-        
-        return {'fmri': self.fmri_transform(fmri), 'image': self.image_transform(img)}
-
-    def switch_sub_view(self, sub, subs):
-        self.start_pointer = subs.index(sub) * self.num_per_sub
-        self.end_pointer = (subs.index(sub) + 1) * self.num_per_sub
-
-        assert self.end_pointer <= len(self.fmri_latent), f'{sub} not exist'
 
 def get_stimuli_list(root, sub):
     sti_name = []

@@ -14,7 +14,7 @@ import copy
 # own code
 sys.path.insert(0,'.')
 sys.path.insert(0,'./code/sc_mbm')
-from config import Config_MAE_finetune
+from config import Config_MBM_finetune
 from dataset import create_Kamitani_dataset, create_BOLD5000_dataset
 from sc_mbm.mae_for_fmri import MAEforFMRI
 from sc_mbm.trainer import train_one_epoch
@@ -28,7 +28,7 @@ os.environ['WANDB_DIR'] = "."
 class wandb_logger:
     def __init__(self, config):
         wandb.init(project="step1_sc-mbm",
-                    group='finetune_more',
+                    group='Finetune',
                     anonymous="allow",
                     config=config,
                     reinit=True)
@@ -100,7 +100,8 @@ def main(config):
     sd = torch.load(config.pretrain_mae_path, map_location='cpu')
     config_pretrain = sd['config']
     
-    output_path = os.path.join(config.root_path, 'results', 'mae_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
+    # output_path = os.path.join(config.root_path, 'results', 'fmri_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
+    output_path = os.path.join(config.root_path, 'results', 'fmri_finetune')
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
     
@@ -227,7 +228,7 @@ def update_config(args, config):
 if __name__ == '__main__':
     args = get_args_parser()
     args = args.parse_args()
-    config = Config_MAE_finetune()
+    config = Config_MBM_finetune()
     config = update_config(args, config)
     main(config)
     

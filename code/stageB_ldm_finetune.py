@@ -17,14 +17,13 @@ sys.path.insert(0,'./code')
 sys.path.insert(0,'./code/sc_mbm')
 sys.path.insert(0,'./code/dc_ldm')
 from config import Config_Generative_Model
-from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_Shen2019_dataset, create_BOLD5000_dataset
+from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_BOLD5000_dataset
 from dc_ldm.ldm_for_fmri import fLDM
 from eval_metrics import get_similarity_metric
 
 
 def wandb_init(config, output_path):
     wandb.init( project="stageB_dc-ldm",
-                group=config.group_name,
                 anonymous="allow",
                 config=config,
                 reinit=True)
@@ -43,12 +42,6 @@ def channel_last(img):
         if img.shape[-1] == 3:
             return img
         return rearrange(img, 'c h w -> h w c')
-
-def create_fmri_latents_from_dataset(dataset):
-    latents = np.expand_dims(dataset.fmri, axis=1)
-    latent_dataset = fmri_latent_dataset(latents, dataset.image, dataset.img_class, dataset.img_class_name,
-            dataset.naive_label, dataset.fmri_transform, dataset.image_transform, dataset.num_per_sub)
-    return latent_dataset
 
 def get_eval_metric(samples, avg=True):
     metric_list = ['mse', 'pcc', 'ssim', 'psm']
@@ -74,7 +67,6 @@ def get_eval_metric(samples, avg=True):
         res_part.append(np.mean(res))
     res_list.append(np.mean(res_part))
     metric_list.append('top-1-class')
-
     return res_list, metric_list
                
 def generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_dataset_test, config):
@@ -83,31 +75,23 @@ def generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_d
     grid_imgs = Image.fromarray(grid.astype(np.uint8))
     grid_imgs.save(os.path.join(config.output_path, 'samples_train.png'))
     wandb.log({'summary/samples_train': wandb.Image(grid_imgs)})
-    if config.dataset == 'Kamitani_2017':
-        subs = config.kam_subs
-    elif config.dataset == 'Shen_2019':
-        subs = config.shen_subs
-    else:
-        raise NotImplementedError
 
-    for sub in subs:
-        fmri_latents_dataset_test.switch_sub_view(sub, subs)
-        grid, samples = generative_model.generate(fmri_latents_dataset_test, config.num_samples, 
-                    config.ddim_steps, config.HW)
-        grid_imgs = Image.fromarray(grid.astype(np.uint8))
-        grid_imgs.save(os.path.join(config.output_path,f'./samples_test_{sub}.png'))
-        for sp_idx, imgs in enumerate(samples):
-            for copy_idx, img in enumerate(imgs[1:]):
-                img = rearrange(img, 'c h w -> h w c')
-                Image.fromarray(img).save(os.path.join(config.output_path, 
-                                f'./test{sp_idx}-{copy_idx}_{sub}.png'))
+    grid, samples = generative_model.generate(fmri_latents_dataset_test, config.num_samples, 
+                config.ddim_steps, config.HW)
+    grid_imgs = Image.fromarray(grid.astype(np.uint8))
+    grid_imgs.save(os.path.join(config.output_path,f'./samples_test.png'))
+    for sp_idx, imgs in enumerate(samples):
+        for copy_idx, img in enumerate(imgs[1:]):
+            img = rearrange(img, 'c h w -> h w c')
+            Image.fromarray(img).save(os.path.join(config.output_path, 
+                            f'./test{sp_idx}-{copy_idx}.png'))
 
-        wandb.log({f'summary/samples_test_{sub}': wandb.Image(grid_imgs)})
+    wandb.log({f'summary/samples_test': wandb.Image(grid_imgs)})
 
-        metric, metric_list = get_eval_metric(samples, avg=config.eval_avg)
-        metric_dict = {f'summary/pair-wise_{k}_{sub}':v for k, v in zip(metric_list[:-1], metric[:-1])}
-        metric_dict[f'summary/{metric_list[-1]}_{sub}'] = metric[-1]
-        wandb.log(metric_dict)
+    metric, metric_list = get_eval_metric(samples, avg=config.eval_avg)
+    metric_dict = {f'summary/pair-wise_{k}':v for k, v in zip(metric_list[:-1], metric[:-1])}
+    metric_dict[f'summary/{metric_list[-1]}'] = metric[-1]
+    wandb.log(metric_dict)
 
 def normalize(img):
     if img.shape[-1] == 3:
@@ -138,10 +122,6 @@ def main(config):
     torch.manual_seed(config.seed)
     np.random.seed(config.seed)
 
-    # prepare dataset
-    # normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-    #                                   std=[0.229, 0.224, 0.225])
-
     crop_pix = int(config.crop_ratio*config.img_size)
     img_transform_train = transforms.Compose([
         normalize,
@@ -154,18 +134,10 @@ def main(config):
         channel_last
     ])
     if config.dataset == 'Kamitani_2017':
-        kam_dataset_train, kam_dataset_test = create_Kamitani_dataset(config.kam_path, config.roi, config.patch_size, 
+        fmri_latents_dataset_train, fmri_latents_dataset_test = create_Kamitani_dataset(config.kam_path, config.roi, config.patch_size, 
                 fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test], 
-                subjects=config.kam_subs, test_category=config.test_category)
-        fmri_latents_dataset_train = create_fmri_latents_from_dataset(kam_dataset_train)
-        fmri_latents_dataset_test = create_fmri_latents_from_dataset(kam_dataset_test)
-        num_voxels = kam_dataset_train.num_voxels
-    elif config.dataset == 'Shen_2019':
-        fmri_latents_dataset_train, fmri_latents_dataset_test = create_Shen2019_dataset(config.shen_path, config.kam_path, config.roi, config.patch_size, 
-                fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test], 
-                subjects=config.shen_subs)
+                subjects=config.kam_subs)
         num_voxels = fmri_latents_dataset_train.num_voxels
-
     elif config.dataset == 'BOLD5000':
         fmri_latents_dataset_train, fmri_latents_dataset_test = create_BOLD5000_dataset(config.bold5000_path, config.patch_size, 
                 fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test], 
@@ -174,10 +146,10 @@ def main(config):
     else:
         raise NotImplementedError
 
-    # prepare pretrained mae 
-    pretrain_mae_metafile = torch.load(config.pretrain_mae_path, map_location='cpu')
+    # prepare pretrained mbm 
+    pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cpu')
     # create generateive model
-    generative_model = fLDM(pretrain_mae_metafile, num_voxels,
+    generative_model = fLDM(pretrain_mbm_metafile, num_voxels,
                 device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger, 
                 mask_ratio=config.mask_ratio, ddim_steps=config.ddim_steps, 
                 global_pool=config.global_pool, use_time_cond=config.use_time_cond)
@@ -188,8 +160,9 @@ def main(config):
         generative_model.model.load_state_dict(model_meta['model_state_dict'])
         print('model resumed')
     # finetune the model
-    generative_model.finetune(config.trainer, fmri_latents_dataset_train, fmri_latents_dataset_test,
-                config.batch_size1, config.lr1, config.output_path, config.local_rank, config=config)
+    trainer = create_trainer(config.num_epoch_1, config.precision, config.accumulate_grad, logger, check_val_every_n_epoch=5)
+    generative_model.finetune(trainer, fmri_latents_dataset_train, fmri_latents_dataset_test,
+                config.batch_size1, config.lr1, config.output_path, config=config)
 
     # generate images
     # generate limited train images and generate images for subjects seperately
@@ -199,7 +172,7 @@ def main(config):
     return
 
 def get_args_parser():
-    parser = argparse.ArgumentParser('MAE pre-training for fMRI', add_help=False)
+    parser = argparse.ArgumentParser('Double Conditioning LDM Finetuning', add_help=False)
     # project parameters
     parser.add_argument('--seed', type=int)
     parser.add_argument('--root_path', type=str)
@@ -207,7 +180,7 @@ def get_args_parser():
     parser.add_argument('--bold5000_path', type=str)
     parser.add_argument('--roi', type=str)
     parser.add_argument('--patch_size', type=int)
-    parser.add_argument('--pretrain_mae_path', type=str)
+    parser.add_argument('--pretrain_mbm_path', type=str)
     parser.add_argument('--img_size', type=int)
     parser.add_argument('--crop_ratio', type=float)
     parser.add_argument('--group_name', type=str)
@@ -275,14 +248,9 @@ if __name__ == '__main__':
     config.output_path = output_path
     os.makedirs(output_path, exist_ok=True)
     
-    if config.local_rank == 0:
-        wandb_init(config, output_path)
+    wandb_init(config, output_path)
 
     logger = WandbLogger()
-    config.trainer = [
-        create_trainer(config.num_epoch_1, config.precision, config.accumulate_grad, logger, check_val_every_n_epoch=5)
-    ]
     config.logger = logger
     main(config)
-    if config.local_rank == 0:
-        wandb_finish()
+    wandb_finish()

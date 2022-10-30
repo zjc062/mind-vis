@@ -14,7 +14,7 @@ import copy
 # own code
 sys.path.insert(0,'.')
 sys.path.insert(0,'./code/sc_mbm')
-from config import Config_MAE_fMRI
+from config import Config_MBM_fMRI
 from dataset import hcp_dataset
 from sc_mbm.mae_for_fmri import MAEforFMRI
 from sc_mbm.trainer import train_one_epoch
@@ -28,7 +28,7 @@ class wandb_logger:
     def __init__(self, config):
         wandb.init(project="stageA_sc-mbm",
                     anonymous="allow",
-                    group=config.group_name,
+                    group='Pre-training',
                     config=config,
                     reinit=True)
 
@@ -110,7 +110,8 @@ def main(config):
     if torch.cuda.device_count() > 1:
         torch.cuda.set_device(config.local_rank) 
         torch.distributed.init_process_group(backend='nccl')
-    output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
+    # output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
+    output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain')
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
     
@@ -125,7 +126,7 @@ def main(config):
     # create dataset and dataloader
     dataset_pretrain = hcp_dataset(path=os.path.join(config.root_path, 'data/HCP/npz'), roi=config.roi, patch_size=config.patch_size,
                 transform=fmri_transform, aug_times=config.aug_times, num_sub_limit=config.num_sub_limit, 
-                include_kam=config.include_kam, include_shen=config.include_shen, include_hcp=config.include_hcp)
+                include_kam=config.include_kam, include_hcp=config.include_hcp)
    
     print(f'Dataset size: {len(dataset_pretrain)}\nNumber of voxels: {dataset_pretrain.num_voxels}')
     sampler = torch.utils.data.DistributedSampler(dataset_pretrain, rank=config.local_rank) if torch.cuda.device_count() > 1 else None 
@@ -241,7 +242,7 @@ def update_config(args, config):
 if __name__ == '__main__':
     args = get_args_parser()
     args = args.parse_args()
-    config = Config_MAE_fMRI()
+    config = Config_MBM_fMRI()
     config = update_config(args, config)
     main(config)
     

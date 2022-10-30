@@ -33,11 +33,11 @@ def normalize(img):
     img = img * 2.0 - 1.0 # to -1 ~ 1
     return img
 
-def create_fmri_latents_from_dataset(dataset):
-    latents = np.expand_dims(dataset.fmri, axis=1)
-    latent_dataset = fmri_latent_dataset(latents, dataset.image, dataset.img_class, dataset.img_class_name,
-            dataset.naive_label, dataset.fmri_transform, dataset.image_transform, dataset.num_per_sub)
-    return latent_dataset
+# def create_fmri_latents_from_dataset(dataset):
+#     latents = np.expand_dims(dataset.fmri, axis=1)
+#     latent_dataset = fmri_latent_dataset(latents, dataset.image, dataset.img_class, dataset.img_class_name,
+#             dataset.naive_label, dataset.fmri_transform, dataset.image_transform, dataset.num_per_sub)
+#     return latent_dataset
 def wandb_init(config):
     wandb.init( project="stageB_dc-ldm",
                 group='eval',
@@ -94,9 +94,9 @@ if __name__ == '__main__':
             fmri_transform=torch.FloatTensor, image_transform=img_transform_test, 
             subjects=config.kam_subs, test_category=config.test_category)
 
-    fmri_latents_dataset_test = create_fmri_latents_from_dataset(kam_dataset_test)
+    # fmri_latents_dataset_test = create_fmri_latents_from_dataset(kam_dataset_test)
     num_voxels = kam_dataset_test.num_voxels
-    print(len(fmri_latents_dataset_test))
+    print(len(kam_dataset_test))
     # prepare pretrained mae 
     pretrain_mae_metafile = torch.load(config.pretrain_mae_path, map_location='cpu')
     # create generateive model
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     generative_model.model.load_state_dict(sd['model_state_dict'])
     print('load ldm successfully')
     state = sd['state']
-    grid, samples = generative_model.generate(fmri_latents_dataset_test, config.num_samples, 
+    grid, samples = generative_model.generate(kam_dataset_test, config.num_samples, 
                 config.ddim_steps, config.HW, limit=None, state=state) # generate 10 instances
     grid_imgs = Image.fromarray(grid.astype(np.uint8))
 

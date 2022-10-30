@@ -1,10 +1,7 @@
-from cmath import isnan
-from traceback import print_tb
 import utils as ut
 import torch
 import torch.nn as nn
 import numpy as np
-
 from timm.models.vision_transformer import Block
 import torch.nn.functional as F
 
@@ -85,7 +82,6 @@ class MAEforFMRI(nn.Module):
                 nn.Conv1d(num_patches, 512, kernel_size=1, stride=1, bias=True),
                 nn.Linear(decoder_embed_dim, 28*28, bias=True)
             )
-            # nn.Conv2d(num_patches, 3, kernel_size=1, stride=1, bias=True)
             # --------------------------------------------------------------------------
 
         self.patch_size = patch_size
@@ -315,8 +311,7 @@ class MAEforFMRI(nn.Module):
 
 class fmri_encoder(nn.Module):
     def __init__(self, num_voxels=224, patch_size=16, embed_dim=1024, in_chans=1,
-                 depth=24, num_heads=16, mlp_ratio=4., decoder_embed_dim=512, 
-                 decoder_depth=8, decoder_num_heads=16, norm_layer=nn.LayerNorm, global_pool=True):
+                 depth=24, num_heads=16, mlp_ratio=4., norm_layer=nn.LayerNorm, global_pool=True):
         super().__init__()
         self.patch_embed = PatchEmbed1D(num_voxels, patch_size, in_chans, embed_dim)
 
@@ -334,7 +329,6 @@ class fmri_encoder(nn.Module):
 
         self.patch_size = patch_size
         self.num_patches = num_patches
-        self.decoder_embed_dim = decoder_embed_dim
         self.global_pool = global_pool
         self.initialize_weights()
 
@@ -367,57 +361,18 @@ class fmri_encoder(nn.Module):
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
 
-    def random_masking(self, x, mask_ratio):
-        """
-        Perform per-sample random masking by per-sample shuffling.
-        Per-sample shuffling is done by argsort random noise.
-        x: [N, L, D], sequence
-        """
-        N, L, D = x.shape  # batch, length, dim
-        len_keep = int(L * (1 - mask_ratio))
-        
-        noise = torch.rand(N, L, device=x.device)  # noise in [0, 1]
-        
-        # sort noise for each sample
-        ids_shuffle = torch.argsort(noise, dim=1)  # ascend: small is keep, large is remove
-        ids_restore = torch.argsort(ids_shuffle, dim=1)
-
-        # keep the first subset
-        ids_keep = ids_shuffle[:, :len_keep]
-        x_masked = torch.gather(x, dim=1, index=ids_keep.unsqueeze(-1).repeat(1, 1, D))
-
-        # generate the binary mask: 0 is keep, 1 is remove
-        mask = torch.ones([N, L], device=x.device)
-        mask[:, :len_keep] = 0
-        # unshuffle to get the binary mask
-        mask = torch.gather(mask, dim=1, index=ids_restore)
-
-        return x_masked, mask, ids_restore
-   
-    def forward_encoder(self, x, mask_ratio):
+    def forward_encoder(self, x):
         # embed patches
         x = self.patch_embed(x)
 
         # add pos embed w/o cls token
         x = x + self.pos_embed[:, 1:, :]
-        # x, mask, ids_restore = self.random_masking(x, mask_ratio)
-        # append cls token
-
-        # cls_token = self.cls_token + self.pos_embed[:, :1, :]
-        # cls_tokens = cls_token.expand(x.shape[0], -1, -1)
-        # x = torch.cat((cls_tokens, x), dim=1)
-
         # apply Transformer blocks
         for blk in self.blocks:
             x = blk(x)
         if self.global_pool:
             x = x.mean(dim=1, keepdim=True)
         x = self.norm(x)
-
-        # mask_tokens = self.mask_token.repeat(x.shape[0], ids_restore.shape[1] + 1 - x.shape[1], 1)
-        # x_ = torch.cat([x[:, 1:, :], mask_tokens], dim=1)  # no cls token
-        # x_ = torch.gather(x_, dim=1, index=ids_restore.unsqueeze(-1).repeat(1, 1, x.shape[2]))  # unshuffle
-        # x = torch.cat([x[:, :1, :], x_], dim=1)  # append cls token
 
         return x  
 

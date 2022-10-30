@@ -1,1 +1,15 @@
-.DS_Store
+results/
+data/
+__pycache__/
+wandb/
+lightning_logs/
+image_generation/
+*.out
+*.npz
+*.ckpt
+*.DS_Store
+*.zip
+*.tar
+*.nii
+*.gz
+*.png

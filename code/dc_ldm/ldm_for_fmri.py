@@ -2,13 +2,12 @@ import sys
 from turtle import forward
 import numpy as np
 import wandb
-sys.path.insert(0,'../code/')
+# sys.path.insert(0,'../code/')
 import torch
 from dc_ldm.util import instantiate_from_config
 from omegaconf import OmegaConf
 import torch.nn as nn
 import os
-from dc_ldm.models.diffusion.ddim import DDIMSampler
 from dc_ldm.models.diffusion.plms import PLMSSampler
 from einops import rearrange, repeat
 from torchvision.utils import make_grid
@@ -16,13 +15,11 @@ from torch.utils.data import DataLoader
 import torch.nn.functional as F
 from sc_mbm.utils import adjust_learning_rate
 from PIL import Image
-import copy
-from code.sc_mbm.mae_for_fmri import fmri_encoder
+from sc_mbm.mae_for_fmri import fmri_encoder
 
 def create_model_from_config(config, num_voxels, global_pool):
     model = fmri_encoder(num_voxels=num_voxels, patch_size=config.patch_size, embed_dim=config.embed_dim,
-                decoder_embed_dim=config.decoder_embed_dim, depth=config.depth, decoder_num_heads=config.decoder_num_heads,
-                num_heads=config.num_heads, mlp_ratio=config.mlp_ratio, decoder_depth=config.decoder_depth, global_pool=global_pool) 
+                depth=config.depth, num_heads=config.num_heads, mlp_ratio=config.mlp_ratio, global_pool=global_pool) 
     return model
 
 
@@ -69,13 +66,7 @@ class fLDM:
         model = instantiate_from_config(config.model)
         pl_sd = torch.load(self.ckp_path, map_location="cpu")['state_dict']
        
-        # hack the pretrain model
-        # pl_sd['model.diffusion_model.input_blocks.0.0.weight'] = torch.cat([pl_sd['model.diffusion_model.input_blocks.0.0.weight'],
-        #              torch.unsqueeze(pl_sd['model.diffusion_model.input_blocks.0.0.weight'][:,0], dim=1)], dim=1)
-        
         m, u = model.load_state_dict(pl_sd, strict=False)
-        
-        # self.pretrained_cond_model = model.cond_stage_model
         model.cond_stage_trainable = True
         model.cond_stage_model = cond_stage_model(metafile, num_voxels, self.cond_dim, 
                             mask_ratio=mask_ratio, global_pool=global_pool)
@@ -97,7 +88,7 @@ class fLDM:
         self.metafile = metafile
 
     def finetune(self, trainers, dataset, test_dataset, bs1, lr1,
-                output_path, local_rank, config=None):
+                output_path, config=None):
         config.trainer = None
         config.logger = None
         self.model.main_config = config
@@ -116,7 +107,7 @@ class fLDM:
         self.model.learning_rate = lr1
         self.model.train_cond_stage_only = True
         self.model.eval_avg = config.eval_avg
-        trainers[0].fit(self.model, dataloader, val_dataloaders=test_loader)
+        trainers.fit(self.model, dataloader, val_dataloaders=test_loader)
 
         self.model.unfreeze_whole_model()
         
@@ -143,8 +134,6 @@ class fLDM:
             shape = (self.ldm_config.model.params.channels,
                 HW[0] // 2**(num_resolutions-1), HW[1] // 2**(num_resolutions-1))
 
-        # model = copy.deepcopy(self.model)
-        # model = model.to(self.device)
         model = self.model.to(self.device)
         sampler = PLMSSampler(model)
         # sampler = DDIMSampler(model)
@@ -186,13 +175,5 @@ class fLDM:
         model = model.to('cpu')
         
         return grid, (255. * torch.stack(all_samples, 0).cpu().numpy()).astype(np.uint8)
-
-def generate_intermediate_image(generative_model, fmri_latents_dataset_train, num_samples=5,ddim_steps=200,HW=None, 
-            output_path='.', surfix=''):
-    grid, _ = generative_model.generate(fmri_latents_dataset_train, num_samples, 
-                ddim_steps, HW, 5) # generate 5 instances
-    grid_imgs = Image.fromarray(grid.astype(np.uint8))
-    grid_imgs.save(os.path.join(output_path, f'samples_train_{surfix}.png'))
-    wandb.log({f'samples_train_{surfix}': wandb.Image(grid_imgs)})
 
 
