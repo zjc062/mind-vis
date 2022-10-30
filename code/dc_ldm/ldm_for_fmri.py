@@ -24,13 +24,12 @@ def create_model_from_config(config, num_voxels, global_pool):
 
 
 class cond_stage_model(nn.Module):
-    def __init__(self, metafile, num_voxels, cond_dim=1280, mask_ratio=0.05, global_pool=True):
+    def __init__(self, metafile, num_voxels, cond_dim=1280, global_pool=True):
         super().__init__()
         # prepare pretrained mae 
         model = create_model_from_config(metafile['config'], num_voxels, global_pool)
         model.load_checkpoint(metafile['model'])
-        self.mask_ratio = mask_ratio
-        self.mae = model
+        self.encoder = model
         self.fmri_seq_len = model.num_patches
         self.fmri_latent_dim = model.embed_dim
         if global_pool == False:
@@ -43,7 +42,7 @@ class cond_stage_model(nn.Module):
 
     def forward(self, x):
         # n, c, w = x.shape
-        latent_crossattn = self.mae(x, mask_ratio=self.mask_ratio)
+        latent_crossattn = self.encoder(x)
         if self.global_pool == False:
             latent_crossattn = self.channel_mapper(latent_crossattn)
         latent_crossattn = self.dim_mapper(latent_crossattn)
@@ -54,7 +53,7 @@ class fLDM:
 
     def __init__(self, metafile, num_voxels, device=torch.device('cpu'),
                  pretrain_root='../pretrains/ldm/label2img',
-                 logger=None, mask_ratio=0.05, ddim_steps=250, global_pool=True, use_time_cond=True):
+                 logger=None, ddim_steps=250, global_pool=True, use_time_cond=True):
         self.ckp_path = os.path.join(pretrain_root, 'model.ckpt')
         self.config_path = os.path.join(pretrain_root, 'config.yaml') 
         config = OmegaConf.load(self.config_path)
@@ -68,8 +67,7 @@ class fLDM:
        
         m, u = model.load_state_dict(pl_sd, strict=False)
         model.cond_stage_trainable = True
-        model.cond_stage_model = cond_stage_model(metafile, num_voxels, self.cond_dim, 
-                            mask_ratio=mask_ratio, global_pool=global_pool)
+        model.cond_stage_model = cond_stage_model(metafile, num_voxels, self.cond_dim, global_pool=global_pool)
 
         model.ddim_steps = ddim_steps
         model.re_init_ema()

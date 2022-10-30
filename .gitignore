@@ -13,3 +13,4 @@ image_generation/
 *.nii
 *.gz
 *.png
+*.pth

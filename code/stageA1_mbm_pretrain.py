@@ -11,9 +11,6 @@ import matplotlib.pyplot as plt
 import wandb
 import copy
 
-# own code
-sys.path.insert(0,'.')
-sys.path.insert(0,'./code/sc_mbm')
 from config import Config_MBM_fMRI
 from dataset import hcp_dataset
 from sc_mbm.mae_for_fmri import MAEforFMRI
@@ -26,9 +23,10 @@ os.environ['WANDB_DIR'] = "."
 
 class wandb_logger:
     def __init__(self, config):
-        wandb.init(project="stageA_sc-mbm",
+        wandb.init(
+                    project="mind-vis",
                     anonymous="allow",
-                    group='Pre-training',
+                    group='stageA_sc-mbm',
                     config=config,
                     reinit=True)
 

@@ -23,7 +23,8 @@ from eval_metrics import get_similarity_metric
 
 
 def wandb_init(config, output_path):
-    wandb.init( project="stageB_dc-ldm",
+    wandb.init( project='mind-vis',
+                group="stageB_dc-ldm",
                 anonymous="allow",
                 config=config,
                 reinit=True)
@@ -118,7 +119,7 @@ def fmri_transform(x, sparse_rate=0.2):
 
 def main(config):
     # project setup
-    device = torch.device(f'cuda:{config.local_rank}') if torch.cuda.is_available() else torch.device('cpu')
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     torch.manual_seed(config.seed)
     np.random.seed(config.seed)
 
@@ -151,8 +152,7 @@ def main(config):
     # create generateive model
     generative_model = fLDM(pretrain_mbm_metafile, num_voxels,
                 device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger, 
-                mask_ratio=config.mask_ratio, ddim_steps=config.ddim_steps, 
-                global_pool=config.global_pool, use_time_cond=config.use_time_cond)
+                ddim_steps=config.ddim_steps, global_pool=config.global_pool, use_time_cond=config.use_time_cond)
     
     # resume training if applicable
     if config.checkpoint_path is not None:
@@ -166,8 +166,7 @@ def main(config):
 
     # generate images
     # generate limited train images and generate images for subjects seperately
-    if config.local_rank == 0:
-        generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_dataset_test, config)
+    generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_dataset_test, config)
 
     return
 
@@ -205,9 +204,8 @@ def get_args_parser():
     parser.add_argument('--use_time_cond', type=bool)
     parser.add_argument('--eval_avg', type=bool)
 
-
-    # distributed training parameters
-    parser.add_argument('--local_rank', type=int)
+    # # distributed training parameters
+    # parser.add_argument('--local_rank', type=int)
 
     return parser
 

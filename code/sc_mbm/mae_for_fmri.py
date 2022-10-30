@@ -1,4 +1,4 @@
-import utils as ut
+import sc_mbm.utils as ut
 import torch
 import torch.nn as nn
 import numpy as np
@@ -376,10 +376,10 @@ class fmri_encoder(nn.Module):
 
         return x  
 
-    def forward(self, imgs, mask_ratio=0.75):
+    def forward(self, imgs):
         if imgs.ndim == 2:
             imgs = torch.unsqueeze(imgs, dim=0)  # N, n_seq, embed_dim
-        latent = self.forward_encoder(imgs,mask_ratio) # N, n_seq, embed_dim
+        latent = self.forward_encoder(imgs) # N, n_seq, embed_dim
         return latent # N, n_seq, embed_dim
     
     def load_checkpoint(self, state_dict):

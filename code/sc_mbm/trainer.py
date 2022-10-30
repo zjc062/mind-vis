@@ -1,6 +1,6 @@
 import math, sys
 import torch
-import utils as ut
+import sc_mbm.utils as ut
 from torch._six import inf
 import numpy as np
 import time
