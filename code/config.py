@@ -1,8 +1,12 @@
 import os
 import numpy as np
 
+class Config_MAE_fMRI: # back compatibility
+    pass
+class Config_MBM_finetune: # back compatibility
+    pass 
 
-class Config_MBM_fMRI:
+class Config_MBM_fMRI(Config_MAE_fMRI):
     # configs for fmri_pretrain.py
     def __init__(self):
     # --------------------------------------------
@@ -27,7 +31,7 @@ class Config_MBM_fMRI:
         self.mlp_ratio = 1.0
 
         # Project setting
-        self.root_path = '/home/zijiao/Desktop/Zijiao/side_project/mindvis/mind-vis'
+        self.root_path = '.'
         self.output_path = self.root_path
         self.seed = 2022
         self.roi = 'VC'
@@ -45,11 +49,11 @@ class Config_MBM_fMRI:
         # distributed training
         self.local_rank = 0
 
-class Config_MBM_finetune:
+class Config_MBM_finetune(Config_MBM_finetune):
     def __init__(self):
         
         # Project setting
-        self.root_path = '/home/zijiao/Desktop/Zijiao/side_project/mindvis/mind-vis'
+        self.root_path = '.'
         self.output_path = self.root_path
         self.pretrain_mae_path = os.path.join(self.root_path, 'results/fmri_pretrain/checkpoints/checkpoint.pth') 
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
@@ -95,7 +99,7 @@ class Config_Generative_Model:
         self.kam_subs = ['sbj_3']
         self.bold5000_subs = ['CSI1']
 
-        self.img_size = 500 if self.dataset == 'Kamitani_2017' else 256
+        self.img_size = 256
 
         np.random.seed(self.seed)
         # finetune parameters

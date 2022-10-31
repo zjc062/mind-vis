@@ -2,14 +2,15 @@ import os, sys
 import numpy as np
 import torch
 from eval_metrics import get_similarity_metric
-from dataset import create_Kamitani_dataset
+from dataset import create_Kamitani_dataset, create_BOLD5000_dataset
 from dc_ldm.ldm_for_fmri import fLDM
 from einops import rearrange
 from PIL import Image
 import torchvision.transforms as transforms
-from config import Config_Generative_Model
+from config import *
 import wandb
 import datetime
+import argparse
 
 def to_image(img):
     if img.shape[-1] != 3:
@@ -69,12 +70,30 @@ def get_eval_metric(samples, avg=True):
     metric_list.append('top-1-class (max)')
     return res_list, metric_list
 
+def get_args_parser():
+    parser = argparse.ArgumentParser('Double Conditioning LDM Finetuning', add_help=False)
+    # project parameters
+    parser.add_argument('--root', type=str, default='.')
+    parser.add_argument('--target', type=str, default='GOD')
+
+    return parser
+
 
 if __name__ == '__main__':
-    
-    model_path =  './results/generation/13-09-2022-12:44:40/checkpoint_best.pth'
+    args = get_args_parser()
+    args = args.parse_args()
+    root = args.root
+    target = args.target
+    model_path = os.path.join(root, 'pretrains', f'{target}', 'finetuned.pth')
+  
     sd = torch.load(model_path, map_location='cpu')
     config = sd['config']
+    # update paths
+    config.root_path = root
+    config.kam_path = os.path.join(root, 'data/Kamitani/npz')
+    config.bold5000_path = os.path.join(root, 'data/BOLD5000')
+    config.pretrain_mbm_path = os.path.join(root, 'pretrains', f'{target}', 'fmri_encoder.pth')
+    config.pretrain_gm_path = os.path.join(root, 'pretrains/ldm/label2img')
     print(config.__dict__)
 
     output_path = os.path.join(config.root_path, 'results', 'eval',  
@@ -87,24 +106,29 @@ if __name__ == '__main__':
         channel_last
     ])
 
-    _, kam_dataset_test = create_Kamitani_dataset(config.kam_path, config.roi, config.patch_size, 
-            fmri_transform=torch.FloatTensor, image_transform=img_transform_test, 
-            subjects=config.kam_subs, test_category=config.test_category)
-
-    # fmri_latents_dataset_test = create_fmri_latents_from_dataset(kam_dataset_test)
-    num_voxels = kam_dataset_test.num_voxels
-    print(len(kam_dataset_test))
+    if target == 'GOD':
+        _, dataset_test = create_Kamitani_dataset(config.kam_path, config.roi, config.patch_size, 
+                fmri_transform=torch.FloatTensor, image_transform=img_transform_test, 
+                subjects=config.kam_subs, test_category=config.test_category)
+    elif target == 'BOLD5000':
+        _, dataset_test = create_BOLD5000_dataset(config.bold5000_path, config.patch_size, 
+                fmri_transform=torch.FloatTensor, image_transform=img_transform_test, 
+                subjects=config.bold5000_subs)
+    else:
+        raise NotImplementedError
+ 
+    num_voxels = dataset_test.num_voxels
+    print(len(dataset_test))
     # prepare pretrained mae 
-    pretrain_mae_metafile = torch.load(config.pretrain_mae_path, map_location='cpu')
+    pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cpu')
     # create generateive model
-    generative_model = fLDM(pretrain_mae_metafile, num_voxels,
-                device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger, 
-                mask_ratio=config.mask_ratio, ddim_steps=config.ddim_steps, 
-                global_pool=config.global_pool, use_time_cond=config.use_time_cond)
+    generative_model = fLDM(pretrain_mbm_metafile, num_voxels,
+                device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger,
+                ddim_steps=config.ddim_steps, global_pool=config.global_pool, use_time_cond=config.use_time_cond)
     generative_model.model.load_state_dict(sd['model_state_dict'])
     print('load ldm successfully')
     state = sd['state']
-    grid, samples = generative_model.generate(kam_dataset_test, config.num_samples, 
+    grid, samples = generative_model.generate(dataset_test, config.num_samples, 
                 config.ddim_steps, config.HW, limit=None, state=state) # generate 10 instances
     grid_imgs = Image.fromarray(grid.astype(np.uint8))
 

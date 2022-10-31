@@ -15,41 +15,105 @@ Our framework consists of two main stages:
 
 File path | Description
 ```
-**TO BE UPDATED**
+
 /data
-┣ 📂 imagenet
-┃	┣ 📂 val
-┃ 	┃	┗ (ImageNet validation images by original class folders)
+┣ 📂 HCP
+┃	┣ 📂 npz
+┃   ┃	┣ 📂 dummy_sub_01
+┃   ┃ 	┃	┗ HCP_visual_voxel.npz
+┃   ┃	┣ 📂 dummy_sub_02
+┃   ┃ 	┃	┗ ...
 
-┣ 📂 imagenet_depth
-┃	┣ 📂 val_depth_on_orig_small_png_uint8
-┃	┃	┗ (depth component of ImageNet validation images using MiDaS small model)
-┃	┣ 📂 val_depth_on_orig_large_png_uint8
-┃	┃	┗ (depth component of ImageNet validation images using MiDaS large model)
+┣ 📂 Kamitani
+┃	┣ 📂 npz
+┃   ┃	┗ 📜 sbj_1.npz
+┃   ┃	┗ 📜 sbj_2.npz
+┃   ┃	┗ 📜 sbj_3.npz
+┃   ┃	┗ 📜 sbj_4.npz
+┃   ┃	┗ 📜 sbj_5.npz
+┃   ┃	┗ 📜 images_500.npz
+┃   ┃	┗ 📜 imagenet_class_index.json
+┃   ┃	┗ 📜 imagenet_training_label.csv
+┃   ┃	┗ 📜 imagenet_testing_label.csv
 
-┣ 📂 imagenet_rgbd
-┃	┗	(pretrained depth-only & RGBD vgg16/19 model checkpoints optimized for ImageNet classification challenge; These are used as Encoder backbone net or as a reconstruction metric)
+┣ 📂 BOLD5000
+┃	┣ 📂 BOLD5000_GLMsingle_ROI_betas
+┃ 	┃	┣ 📂 py
+┃ 	┃	┃   ┗ CSI1_GLMbetas-TYPED-FITHRF-GLMDENOISE-RR_allses_LHEarlyVis.npy
+┃ 	┃	┃   ┗ ...
+┃ 	┃	┃   ┗ CSIx_GLMbetas-TYPED-FITHRF-GLMDENOISE-RR_allses_xx.npy
+┃	┣ 📂 BOLD5000_Stimuli
+┃ 	┃	┣ 📂 Image_Labels
+┃ 	┃	┃   ┗ coco_final_annotations.pkl
+┃ 	┃	┃   ┗ imagenet_final_labels.txt
+┃ 	┃	┃   ┗ scene_final_labels.txt
+┃ 	┃	┣ 📂 Scene_Stimuli
+┃   ┃ 	┃	┣ 📂 Original_Images
+┃   ┃ 	┃	┣ 📂 Presented_Stimuli
+┃   ┃ 	┃	┗ 📜 repeated_stimuli_113_list.txt
+┃ 	┃	┣ 📂 Stimuli_Presentation_Lists
+┃   ┃ 	┃	┣ 📂 CS1
+┃   ┃   ┃ 	┃	┣ 📂 CS1_sess01
+┃   ┃   ┃   ┃ 	┃	┗ 📜 CSI_sess01_run01.mat
+┃   ┃   ┃   ┃ 	┃	┗ 📜 ...
+┃   ┃   ┃ 	┃	┣ 📂 CS1_sess02
+┃   ┃   ┃   ┃ 	┃	┗ 📜 CSI_sess02_run01.mat
+┃   ┃   ┃   ┃ 	┃	┗ 📜 ...
+┃   ┃   ┃ 	┃	┣ 📂 CS1_sess0x
+┃   ┃ 	┃	┣ 📂 CS2
+┃   ┃   ┃ 	┃	┣ 📂 CS2_sess0x
+┃   ┃   ┃ 	┃	┃	┣ (same as CS1_sess0x)
+┃   ┃ 	┃	┣ 📂 CS3
+┃   ┃   ┃ 	┃	┣ 📂 CS3_sess0x
+┃   ┃   ┃ 	┃	┃	┣ (same as CS1_sess0x)
+┃   ┃ 	┃	┣ 📂 CS4
+┃   ┃   ┃ 	┃	┣ 📂 CS4_sess0x
+┃   ┃   ┃ 	┃	┃	┣ (same as CS1_sess0x)
 
-┣ 📜 images_112.npz (fMRI on ImageNet stimuli at resolution 112x112)
-┣ 📜 rgbd_112_from_224_large_png_uint8.npz (saved RGBD data at resolution 112, depth computed on 224 stimuli using MiDaS large model and saved as PNG uint8)
-┣ 📜 sbj_<X>.npz (fMRI data)
-┗ 📜 model-<X>.pt (MiDaS depth estimation models)
+
+/pretrains
+┣ 📂 ldm
+┃	┣ 📂 label2img
+┃ 	┃	┗ 📜 config.yaml
+┃ 	┃	┗ 📜 model.ckpt
+┃	┣ 📂 text2img-large
+┃ 	┃	┗ 📜 ...
+┃	┣ 📂 layout2img
+┃ 	┃	┗ 📜 ...
+┃	┣ 📂 semantic
+┃ 	┃	┗ 📜 ...
+
+┣ 📂 GOD
+┃	┗ 📜 fmri_encoder.pth
+┃	┗ 📜 finetuned.pth
+
+┣ 📂 BOLD5000
+┃	┗ 📜 fmri_encoder.pth
+┃	┗ 📜 finetuned.pth
+
 
 /code
 ┣ 📂 sc_mbm
-┃	┣ 📂 val
-┃ 	┃	┗ (ImageNet validation images by original class folders)
+┃	┗ 📜 mae_for_fmri.py
+┃	┗ 📜 trainer.py
+┃	┗ 📜 utils.py
 
 ┣ 📂 dc_ldm
-┃	┣ 📂 val_depth_on_orig_small_png_uint8
-┃	┃	┗ (depth component of ImageNet validation images using MiDaS small model)
-┃	┣ 📂 val_depth_on_orig_large_png_uint8
-┃	┃	┗ (depth component of ImageNet validation images using MiDaS large model)
+┃	┗ 📜 ldm_for_fmri.py
+┃	┗ 📜 utils.py
+┃	┣ 📂 models
+┃	┃	┗ (adopted from latent LDM)
+┃	┣ 📂 modules
+┃	┃	┗ (adopted from latent LDM)
 
 ┗  📜 stageA1_mbm_pretrain.py (main script for pre-training for SC-MBM)
 ┗  📜 stageA2_mbm_finetune.py (main script for fine-tuning SC-MBM)
 ┗  📜 stageB_ldm_finetune.py (main script for fine-tuning DC-LDM)
+┗  📜 gen_eval.py (main script for evaluating model performance)
 
+┗  📜 dataset.py (functions for loading datasets)
+┗  📜 eval_metrics.py (functions for evaluation metrics)
+┗  📜 config.py (configurations for the main scripts)
 
 ```
 
@@ -57,7 +121,7 @@ File path | Description
 
 ## Setup Instructions
 ### Environment setup
-Create and activate conda environment named ```mind_vis``` from our ```environment.yaml```
+Create and activate conda environment named ```mind_vis``` from our ```env.yaml```
 ```sh
 conda env create -f environment.yaml
 conda activate mind_vis

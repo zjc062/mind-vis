@@ -2,7 +2,6 @@ import sys
 from turtle import forward
 import numpy as np
 import wandb
-# sys.path.insert(0,'../code/')
 import torch
 from dc_ldm.util import instantiate_from_config
 from omegaconf import OmegaConf
@@ -22,14 +21,13 @@ def create_model_from_config(config, num_voxels, global_pool):
                 depth=config.depth, num_heads=config.num_heads, mlp_ratio=config.mlp_ratio, global_pool=global_pool) 
     return model
 
-
 class cond_stage_model(nn.Module):
     def __init__(self, metafile, num_voxels, cond_dim=1280, global_pool=True):
         super().__init__()
-        # prepare pretrained mae 
+        # prepare pretrained fmri mae 
         model = create_model_from_config(metafile['config'], num_voxels, global_pool)
         model.load_checkpoint(metafile['model'])
-        self.encoder = model
+        self.mae = model
         self.fmri_seq_len = model.num_patches
         self.fmri_latent_dim = model.embed_dim
         if global_pool == False:
@@ -42,7 +40,7 @@ class cond_stage_model(nn.Module):
 
     def forward(self, x):
         # n, c, w = x.shape
-        latent_crossattn = self.encoder(x)
+        latent_crossattn = self.mae(x)
         if self.global_pool == False:
             latent_crossattn = self.channel_mapper(latent_crossattn)
         latent_crossattn = self.dim_mapper(latent_crossattn)

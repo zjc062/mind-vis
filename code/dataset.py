@@ -196,7 +196,7 @@ def get_img_label(class_index:dict, img_filename:list, naive_label_set=None):
 def create_Kamitani_dataset(path='../data/Kamitani/npz',  roi='VC', patch_size=16, fmri_transform=identity,
             image_transform=identity, subjects = ['sbj_1', 'sbj_2', 'sbj_3', 'sbj_4', 'sbj_5'], 
             test_category=None, include_nonavg_test=False):
-    img_npz = dict(np.load(os.path.join(path, 'images_500.npz')))
+    img_npz = dict(np.load(os.path.join(path, 'images_256.npz')))
     with open(os.path.join(path, 'imagenet_class_index.json'), 'r') as f:
         img_class_index = json.load(f)
 
@@ -323,7 +323,7 @@ class Kamitani_dataset(Dataset):
         if index >= len(self.image):
             img = np.zeros_like(self.image[0])
         else:
-            img = self.image[index]
+            img = self.image[index] / 255.0
         fmri = np.expand_dims(fmri, axis=0) # (1, num_voxels)
         if self.return_image_class_info:
             img_class = self.img_class[index]
@@ -333,53 +333,6 @@ class Kamitani_dataset(Dataset):
                     'image_class': img_class, 'image_class_name': img_class_name, 'naive_label':naive_label}
         else:
             return {'fmri': self.fmri_transform(fmri), 'image': self.image_transform(img)}
-
-class fmri_latent_dataset(Dataset):
-    def __init__(self, fmri_latent, image, image_class, image_class_name, naive_label, 
-            fmri_transform=identity, image_transform=identity, num_per_sub=50, bs=5):
-        super(fmri_latent_dataset, self).__init__()
-        assert len(fmri_latent) == len(image), 'len error'
-        self.fmri_latent = fmri_latent # n, seq, embed_dim
-        self.image = image  
-        self.img_class = image_class
-        self.img_class_name = image_class_name
-        self.naive_label = naive_label
-        self.class_latent = np.zeros_like(self.fmri_latent) # place holder
-        self.fmri_transform = fmri_transform
-        self.image_transform = image_transform
-        self.start_pointer = 0
-        self.end_pointer = len(fmri_latent)
-        self.sub = 'all'
-        self.num_per_sub = num_per_sub
-        self.seq_len = fmri_latent.shape[1]
-        self.embed_dim = fmri_latent.shape[2]
-        self.return_image_class_info = False
-    
-    def __len__(self):
-        return len(self.fmri_latent[self.start_pointer:self.end_pointer, ...])
-
-    def __getitem__(self, index):
-        fmri = self.fmri_latent[self.start_pointer:self.end_pointer, ...][index]
-        img = self.image[self.start_pointer:self.end_pointer, ...][index]
-        img_class = self.img_class[self.start_pointer:self.end_pointer][index]
-        img_class_name = self.img_class_name[self.start_pointer:self.end_pointer][index]
-        class_latent = self.class_latent[self.start_pointer:self.end_pointer][index]
-        naive_label = self.naive_label[self.start_pointer:self.end_pointer][index]
-        if self.return_image_class_info:
-            return {'fmri': self.fmri_transform(fmri), 
-                    'image': self.image_transform(img),
-                    'image_class': img_class, 'image_class_name': img_class_name,
-                    'class_latent': self.fmri_transform(class_latent),
-                    'naive_label': torch.tensor(naive_label)}
-        else:
-            return {'fmri': self.fmri_transform(fmri), 
-                    'image': self.image_transform(img)}
-
-    def switch_sub_view(self, sub, subs):
-        self.start_pointer = subs.index(sub) * self.num_per_sub
-        self.end_pointer = (subs.index(sub) + 1) * self.num_per_sub
-
-        assert self.end_pointer <= len(self.fmri_latent), f'{sub} not exist'
 
 class base_dataset(Dataset):
     def __init__(self, x, y=None, transform=identity):
