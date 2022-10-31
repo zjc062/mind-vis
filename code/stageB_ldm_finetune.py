@@ -12,10 +12,6 @@ from pytorch_lightning.loggers import WandbLogger
 import copy
 
 # own code
-sys.path.insert(0,'.')
-sys.path.insert(0,'./code')
-sys.path.insert(0,'./code/sc_mbm')
-sys.path.insert(0,'./code/dc_ldm')
 from config import Config_Generative_Model
 from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_BOLD5000_dataset
 from dc_ldm.ldm_for_fmri import fLDM
@@ -67,7 +63,9 @@ def get_eval_metric(samples, avg=True):
                         n_way=50, num_trials=50, top_k=1, device='cuda')
         res_part.append(np.mean(res))
     res_list.append(np.mean(res_part))
+    res_list.append(np.max(res_part))
     metric_list.append('top-1-class')
+    metric_list.append('top-1-class (max)')
     return res_list, metric_list
                
 def generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_dataset_test, config):
@@ -91,6 +89,7 @@ def generate_images(generative_model, fmri_latents_dataset_train, fmri_latents_d
 
     metric, metric_list = get_eval_metric(samples, avg=config.eval_avg)
     metric_dict = {f'summary/pair-wise_{k}':v for k, v in zip(metric_list[:-1], metric[:-1])}
+    metric_dict[f'summary/{metric_list[-2]}'] = metric[-2]
     metric_dict[f'summary/{metric_list[-1]}'] = metric[-1]
     wandb.log(metric_dict)
 

@@ -1,12 +1,8 @@
 import os, sys
-sys.path.insert(0,'.')
-sys.path.insert(0,'./code')
-sys.path.insert(0,'./code/sc_mbm')
-sys.path.insert(0,'./code/dc_ldm')
 import numpy as np
 import torch
 from eval_metrics import get_similarity_metric
-from dataset import create_Kamitani_dataset, fmri_latent_dataset
+from dataset import create_Kamitani_dataset
 from dc_ldm.ldm_for_fmri import fLDM
 from einops import rearrange
 from PIL import Image
@@ -39,7 +35,7 @@ def normalize(img):
 #             dataset.naive_label, dataset.fmri_transform, dataset.image_transform, dataset.num_per_sub)
 #     return latent_dataset
 def wandb_init(config):
-    wandb.init( project="stageB_dc-ldm",
+    wandb.init( project="mind-vis",
                 group='eval',
                 anonymous="allow",
                 config=config,
@@ -65,11 +61,12 @@ def get_eval_metric(samples, avg=True):
         pred_images = [img[s] for img in samples]
         pred_images = rearrange(np.stack(pred_images), 'n c h w -> n h w c')
         res = get_similarity_metric(pred_images, gt_images, 'class', None, 
-                        n_way=50, num_trials=50, top_k=1, device='cuda')
+                        n_way=50, num_trials=1000, top_k=1, device='cuda')
         res_part.append(np.mean(res))
     res_list.append(np.mean(res_part))
+    res_list.append(np.max(res_part))
     metric_list.append('top-1-class')
-
+    metric_list.append('top-1-class (max)')
     return res_list, metric_list
 
 
@@ -118,6 +115,7 @@ if __name__ == '__main__':
     wandb.log({f'summary/samples_test': wandb.Image(grid_imgs)})
     metric, metric_list = get_eval_metric(samples, avg=True)
     metric_dict = {f'summary/pair-wise_{k}':v for k, v in zip(metric_list[:-1], metric[:-1])}
+    metric_dict[f'summary/{metric_list[-2]}'] = metric[-2]
     metric_dict[f'summary/{metric_list[-1]}'] = metric[-1]
     print(metric_dict)
     wandb.log(metric_dict)

@@ -499,7 +499,9 @@ class DDPM(pl.LightningModule):
                             n_way=50, num_trials=50, top_k=1, device='cuda')
             res_part.append(np.mean(res))
         res_list.append(np.mean(res_part))
+        res_list.append(np.max(res_part))
         metric_list.append('top-1-class')
+        metric_list.append('top-1-class (max)')
 
         return res_list, metric_list    
 

@@ -12,8 +12,6 @@ import wandb
 import copy
 
 # own code
-sys.path.insert(0,'.')
-sys.path.insert(0,'./code/sc_mbm')
 from config import Config_MBM_finetune
 from dataset import create_Kamitani_dataset, create_BOLD5000_dataset
 from sc_mbm.mae_for_fmri import MAEforFMRI
