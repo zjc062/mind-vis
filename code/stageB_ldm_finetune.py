@@ -133,7 +133,7 @@ def main(config):
         normalize, transforms.Resize((256, 256)), 
         channel_last
     ])
-    if config.dataset == 'Kamitani_2017':
+    if config.dataset == 'GOD':
         fmri_latents_dataset_train, fmri_latents_dataset_test = create_Kamitani_dataset(config.kam_path, config.roi, config.patch_size, 
                 fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test], 
                 subjects=config.kam_subs)
@@ -181,8 +181,6 @@ def get_args_parser():
     parser.add_argument('--pretrain_mbm_path', type=str)
     parser.add_argument('--img_size', type=int)
     parser.add_argument('--crop_ratio', type=float)
-    parser.add_argument('--group_name', type=str)
-
 
     # finetune parameters
     parser.add_argument('--batch_size1', type=int)
@@ -198,8 +196,6 @@ def get_args_parser():
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--num_samples', type=int)
     parser.add_argument('--ddim_steps', type=int)
-    parser.add_argument('--scale', type=float)
-    parser.add_argument('--ddim_eta', type=float)
     parser.add_argument('--use_time_cond', type=bool)
     parser.add_argument('--eval_avg', type=bool)
 

@@ -15,7 +15,7 @@ class Config_MBM_fMRI(Config_MAE_fMRI):
         self.lr = 2.5e-4
         self.min_lr = 0.
         self.weight_decay = 0.05
-        self.num_epoch = 5
+        self.num_epoch = 500
         self.warmup_epochs = 40
         self.batch_size = 100
         self.clip_grad = 0.8
@@ -55,10 +55,11 @@ class Config_MBM_finetune(Config_MBM_finetune):
         # Project setting
         self.root_path = '.'
         self.output_path = self.root_path
-        self.pretrain_mae_path = os.path.join(self.root_path, 'results/fmri_pretrain/checkpoints/checkpoint.pth') 
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
         self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
-        self.dataset = 'Kamitani_2017' # Kamitani_2017  or BOLD5000
+        self.dataset = 'GOD' # GOD  or BOLD5000
+        self.pretrain_mbm_path = os.path.join(self.root_path, f'pretrains/{self.dataset}/fmri_encoder.pth') 
+
         self.include_nonavg_test = True
         self.kam_subs = ['sbj_3']
         self.bold5000_subs = ['CSI4']
@@ -67,7 +68,7 @@ class Config_MBM_finetune(Config_MBM_finetune):
         self.lr = 5.3e-5
         self.weight_decay = 0.05
         self.num_epoch = 15
-        self.batch_size = 16 if self.dataset == 'Kamitani_2017' else 4 
+        self.batch_size = 16 if self.dataset == 'GOD' else 4 
         self.mask_ratio = 0.75 
         self.accum_iter = 1
         self.clip_grad = 0.8
@@ -81,29 +82,27 @@ class Config_Generative_Model:
     def __init__(self):
         # project parameters
         self.seed = 2022
-        self.root_path = '/home/zijiao/Desktop/Zijiao/side_project/mindvis/mind-vis'
+        self.root_path = '.'
         self.kam_path = os.path.join(self.root_path, 'data/Kamitani/npz')
         self.bold5000_path = os.path.join(self.root_path, 'data/BOLD5000')
         self.roi = 'VC'
         self.patch_size = 16
 
-        self.pretrain_mbm_path = os.path.join(self.root_path, 'pretrains/mbm/checkpoint_tuned.pth') 
-
-        ######################################################################################
         # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/semantic')
         self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/label2img')
         # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/text2img-large')
         # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/layout2img')
         
-        self.dataset = 'Kamitani_2017' # Kamitani_2017 or BOLD5000
+        self.dataset = 'GOD' # GOD or BOLD5000
         self.kam_subs = ['sbj_3']
         self.bold5000_subs = ['CSI1']
+        self.pretrain_mbm_path = os.path.join(self.root_path, f'pretrains/{self.dataset}/fmri_encoder.pth') 
 
         self.img_size = 256
 
         np.random.seed(self.seed)
         # finetune parameters
-        self.batch_size1 = 5 if self.dataset == 'Kamitani_2017' else 25
+        self.batch_size1 = 5 if self.dataset == 'GOD' else 25
         self.lr1 = 5.3e-5
         self.num_epoch_1 = 500
         

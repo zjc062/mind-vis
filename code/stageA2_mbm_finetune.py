@@ -65,7 +65,7 @@ def get_args_parser():
 
     # Project setting
     parser.add_argument('--root_path', type=str)
-    parser.add_argument('--pretrain_mae_path', type=str)
+    parser.add_argument('--pretrain_mbm_path', type=str)
     parser.add_argument('--dataset', type=str)
     parser.add_argument('--include_nonavg_test', type=bool)   
     
@@ -90,7 +90,7 @@ def main(config):
     if torch.cuda.device_count() > 1:
         torch.cuda.set_device(config.local_rank) 
         torch.distributed.init_process_group(backend='nccl')
-    sd = torch.load(config.pretrain_mae_path, map_location='cpu')
+    sd = torch.load(config.pretrain_mbm_path, map_location='cpu')
     config_pretrain = sd['config']
     
     output_path = os.path.join(config.root_path, 'results', 'fmri_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
@@ -118,7 +118,7 @@ def main(config):
     model_without_ddp = model
 
     # create dataset and dataloader
-    if config.dataset == 'Kamitani_2017':
+    if config.dataset == 'GOD':
         _, test_set = create_Kamitani_dataset(path=config.kam_path, patch_size=config_pretrain.patch_size, 
                                 subjects=config.kam_subs, fmri_transform=torch.FloatTensor, include_nonavg_test=config.include_nonavg_test)
     elif config.dataset == 'BOLD5000':

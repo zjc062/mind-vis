@@ -69,7 +69,7 @@ def get_args_parser():
     parser = argparse.ArgumentParser('Double Conditioning LDM Finetuning', add_help=False)
     # project parameters
     parser.add_argument('--root', type=str, default='.')
-    parser.add_argument('--target', type=str, default='GOD')
+    parser.add_argument('--dataset', type=str, default='GOD')
 
     return parser
 
@@ -78,7 +78,7 @@ if __name__ == '__main__':
     args = get_args_parser()
     args = args.parse_args()
     root = args.root
-    target = args.target
+    target = args.dataset
     model_path = os.path.join(root, 'pretrains', f'{target}', 'finetuned.pth')
   
     sd = torch.load(model_path, map_location='cpu')
