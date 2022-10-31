@@ -13,7 +13,7 @@ import copy
 
 # own code
 from config import Config_Generative_Model
-from dataset import create_Kamitani_dataset, fmri_latent_dataset, create_BOLD5000_dataset
+from dataset import create_Kamitani_dataset, create_BOLD5000_dataset
 from dc_ldm.ldm_for_fmri import fLDM
 from eval_metrics import get_similarity_metric
 

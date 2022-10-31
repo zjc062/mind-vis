@@ -53,7 +53,7 @@ class wandb_logger:
         wandb.finish(quiet=True)
 
 def get_args_parser():
-    parser = argparse.ArgumentParser('MAE pre-training for fMRI', add_help=False)
+    parser = argparse.ArgumentParser('MBM pre-training for fMRI', add_help=False)
     
     # Training Parameters
     parser.add_argument('--lr', type=float)
@@ -73,16 +73,13 @@ def get_args_parser():
 
     # Project setting
     parser.add_argument('--root_path', type=str)
-    parser.add_argument('--output_path', type=str)
     parser.add_argument('--seed', type=str)
     parser.add_argument('--roi', type=str)
     parser.add_argument('--aug_times', type=int)
     parser.add_argument('--num_sub_limit', type=int)
-    parser.add_argument('--group_name', type=str)
 
     parser.add_argument('--include_hcp', type=bool)
     parser.add_argument('--include_kam', type=bool)
-    parser.add_argument('--include_shen', type=bool)
 
     parser.add_argument('--use_nature_img_loss', type=bool)
     parser.add_argument('--img_recon_weight', type=float)
@@ -108,8 +105,8 @@ def main(config):
     if torch.cuda.device_count() > 1:
         torch.cuda.set_device(config.local_rank) 
         torch.distributed.init_process_group(backend='nccl')
-    # output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
-    output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain')
+    output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
+    # output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain')
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
     

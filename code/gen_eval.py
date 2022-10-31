@@ -30,11 +30,6 @@ def normalize(img):
     img = img * 2.0 - 1.0 # to -1 ~ 1
     return img
 
-# def create_fmri_latents_from_dataset(dataset):
-#     latents = np.expand_dims(dataset.fmri, axis=1)
-#     latent_dataset = fmri_latent_dataset(latents, dataset.image, dataset.img_class, dataset.img_class_name,
-#             dataset.naive_label, dataset.fmri_transform, dataset.image_transform, dataset.num_per_sub)
-#     return latent_dataset
 def wandb_init(config):
     wandb.init( project="mind-vis",
                 group='eval',

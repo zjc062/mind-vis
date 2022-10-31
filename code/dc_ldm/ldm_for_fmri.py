@@ -1,5 +1,3 @@
-import sys
-from turtle import forward
 import numpy as np
 import wandb
 import torch
@@ -12,8 +10,6 @@ from einops import rearrange, repeat
 from torchvision.utils import make_grid
 from torch.utils.data import DataLoader
 import torch.nn.functional as F
-from sc_mbm.utils import adjust_learning_rate
-from PIL import Image
 from sc_mbm.mae_for_fmri import fmri_encoder
 
 def create_model_from_config(config, num_voxels, global_pool):

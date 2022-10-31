@@ -65,14 +65,9 @@ def get_args_parser():
 
     # Project setting
     parser.add_argument('--root_path', type=str)
-    parser.add_argument('--output_path', type=str)
     parser.add_argument('--pretrain_mae_path', type=str)
-    parser.add_argument('--kam_path', type=str)
-    parser.add_argument('--bold5000_path', type=str)
     parser.add_argument('--dataset', type=str)
-    parser.add_argument('--include_nonavg_test', type=bool)
-    
-    parser.add_argument('--group_name', type=str)    
+    parser.add_argument('--include_nonavg_test', type=bool)   
     
     # distributed training parameters
     parser.add_argument('--local_rank', type=int)
@@ -98,8 +93,8 @@ def main(config):
     sd = torch.load(config.pretrain_mae_path, map_location='cpu')
     config_pretrain = sd['config']
     
-    # output_path = os.path.join(config.root_path, 'results', 'fmri_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
-    output_path = os.path.join(config.root_path, 'results', 'fmri_finetune')
+    output_path = os.path.join(config.root_path, 'results', 'fmri_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
+    # output_path = os.path.join(config.root_path, 'results', 'fmri_finetune')
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
     
