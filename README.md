@@ -13,6 +13,9 @@ Our framework consists of two main stages:
 - Stage A: Sparse-Coded Masked Brain Modelling (*SC-MBM*)
 - Stage B: Double-Conditioned Latent Diffusion Model (*DC-LDM*)
 
+The **data** folder and **pretrains** folder are not included in this repository. 
+Please download them from [here](https://figshare.com/s/94cd778e6afafb00946e) and put them in the root directory of this repository as shown below.
+
 File path | Description
 ```
 
@@ -135,7 +138,7 @@ sh ./mind-vis/scripts/xxxx
 This script will automatically download the required data and pre-trained models in ```./mind-vis/data```  and ```./mind-vis/pretrains```. Results will be saved in ```./mind-vis/results```. The whole procedure took xxx days on a RTX3090 GPU (Stage A: xxx days; Stage B: xxx hours). 
 
 ### Replicate the result for **Stage A: Sparse-Coded Masked Brain Modelling**
-Please modify the file paths in ```xxx.sh``` and run
+We only include some dummy data entries from HCP dataset (i.e. 3 subjects, due to size limit and license issues) for the pre-training of SC-MBM. To replicate the full result for **Stage A**, please download the whole HCP1200 release from [here](https://db.humanconnectome.org/data/projects/HCP_1200). Please also modify the file paths in ```stageA1_mbm_pretrain.sh``` and run
 ```sh  
 sh ./mind-vis/scripts/xxxx
 ```
