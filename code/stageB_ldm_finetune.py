@@ -159,9 +159,9 @@ def main(config):
         generative_model.model.load_state_dict(model_meta['model_state_dict'])
         print('model resumed')
     # finetune the model
-    trainer = create_trainer(config.num_epoch_1, config.precision, config.accumulate_grad, logger, check_val_every_n_epoch=5)
+    trainer = create_trainer(config.num_epoch, config.precision, config.accumulate_grad, logger, check_val_every_n_epoch=5)
     generative_model.finetune(trainer, fmri_latents_dataset_train, fmri_latents_dataset_test,
-                config.batch_size1, config.lr1, config.output_path, config=config)
+                config.batch_size, config.lr, config.output_path, config=config)
 
     # generate images
     # generate limited train images and generate images for subjects seperately
@@ -176,24 +176,20 @@ def get_args_parser():
     parser.add_argument('--root_path', type=str)
     parser.add_argument('--kam_path', type=str)
     parser.add_argument('--bold5000_path', type=str)
-    parser.add_argument('--roi', type=str)
-    parser.add_argument('--patch_size', type=int)
     parser.add_argument('--pretrain_mbm_path', type=str)
-    parser.add_argument('--img_size', type=int)
     parser.add_argument('--crop_ratio', type=float)
+    parser.add_argument('--dataset', type=str)
 
     # finetune parameters
-    parser.add_argument('--batch_size1', type=int)
-    parser.add_argument('--lr1', type=float)
-    parser.add_argument('--num_epoch_1', type=int)
+    parser.add_argument('--batch_size', type=int)
+    parser.add_argument('--lr', type=float)
+    parser.add_argument('--num_epoch', type=int)
     parser.add_argument('--precision', type=int)
     parser.add_argument('--accumulate_grad', type=int)
-    parser.add_argument('--mask_ratio', type=float)
     parser.add_argument('--global_pool', type=bool)
 
     # diffusion sampling parameters
     parser.add_argument('--pretrain_gm_path', type=str)
-    parser.add_argument('--dataset', type=str)
     parser.add_argument('--num_samples', type=int)
     parser.add_argument('--ddim_steps', type=int)
     parser.add_argument('--use_time_cond', type=bool)

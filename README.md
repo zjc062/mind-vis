@@ -10,7 +10,7 @@ Decoding visual stimuli from brain recordings aims to deepen our understanding o
 
 ## Overview
 Our framework consists of two main stages:
-- Stage A: Sparse-Coded Masked Brain Modelling (*SC-MBM*)
+- Stage A: Sparse-Coded Masked Brain Modeling (*SC-MBM*)
 - Stage B: Double-Conditioned Latent Diffusion Model (*DC-LDM*)
 
 File path | Description
@@ -18,102 +18,73 @@ File path | Description
 
 /data
 ┣ 📂 HCP
-┃	┣ 📂 npz
-┃   ┃	┣ 📂 dummy_sub_01
-┃   ┃ 	┃	┗ HCP_visual_voxel.npz
-┃   ┃	┣ 📂 dummy_sub_02
-┃   ┃ 	┃	┗ ...
+┃   ┣ 📂 npz
+┃   ┃   ┣ 📂 dummy_sub_01
+┃   ┃   ┃   ┗ HCP_visual_voxel.npz
+┃   ┃   ┣ 📂 dummy_sub_02
+┃   ┃   ┃   ┗ ...
 
 ┣ 📂 Kamitani
-┃	┣ 📂 npz
-┃   ┃	┗ 📜 sbj_1.npz
-┃   ┃	┗ 📜 sbj_2.npz
-┃   ┃	┗ 📜 sbj_3.npz
-┃   ┃	┗ 📜 sbj_4.npz
-┃   ┃	┗ 📜 sbj_5.npz
-┃   ┃	┗ 📜 images_500.npz
-┃   ┃	┗ 📜 imagenet_class_index.json
-┃   ┃	┗ 📜 imagenet_training_label.csv
-┃   ┃	┗ 📜 imagenet_testing_label.csv
+┃   ┣ 📂 npz
+┃   ┃   ┗ 📜 sbj_1.npz
+┃   ┃   ┗ 📜 sbj_2.npz
+┃   ┃   ┗ 📜 sbj_3.npz
+┃   ┃   ┗ 📜 sbj_4.npz
+┃   ┃   ┗ 📜 sbj_5.npz
+┃   ┃   ┗ 📜 images_256.npz
+┃   ┃   ┗ 📜 imagenet_class_index.json
+┃   ┃   ┗ 📜 imagenet_training_label.csv
+┃   ┃   ┗ 📜 imagenet_testing_label.csv
 
 ┣ 📂 BOLD5000
-┃	┣ 📂 BOLD5000_GLMsingle_ROI_betas
-┃ 	┃	┣ 📂 py
-┃ 	┃	┃   ┗ CSI1_GLMbetas-TYPED-FITHRF-GLMDENOISE-RR_allses_LHEarlyVis.npy
-┃ 	┃	┃   ┗ ...
-┃ 	┃	┃   ┗ CSIx_GLMbetas-TYPED-FITHRF-GLMDENOISE-RR_allses_xx.npy
-┃	┣ 📂 BOLD5000_Stimuli
-┃ 	┃	┣ 📂 Image_Labels
-┃ 	┃	┃   ┗ coco_final_annotations.pkl
-┃ 	┃	┃   ┗ imagenet_final_labels.txt
-┃ 	┃	┃   ┗ scene_final_labels.txt
-┃ 	┃	┣ 📂 Scene_Stimuli
-┃   ┃ 	┃	┣ 📂 Original_Images
-┃   ┃ 	┃	┣ 📂 Presented_Stimuli
-┃   ┃ 	┃	┗ 📜 repeated_stimuli_113_list.txt
-┃ 	┃	┣ 📂 Stimuli_Presentation_Lists
-┃   ┃ 	┃	┣ 📂 CS1
-┃   ┃   ┃ 	┃	┣ 📂 CS1_sess01
-┃   ┃   ┃   ┃ 	┃	┗ 📜 CSI_sess01_run01.mat
-┃   ┃   ┃   ┃ 	┃	┗ 📜 ...
-┃   ┃   ┃ 	┃	┣ 📂 CS1_sess02
-┃   ┃   ┃   ┃ 	┃	┗ 📜 CSI_sess02_run01.mat
-┃   ┃   ┃   ┃ 	┃	┗ 📜 ...
-┃   ┃   ┃ 	┃	┣ 📂 CS1_sess0x
-┃   ┃ 	┃	┣ 📂 CS2
-┃   ┃   ┃ 	┃	┣ 📂 CS2_sess0x
-┃   ┃   ┃ 	┃	┃	┣ (same as CS1_sess0x)
-┃   ┃ 	┃	┣ 📂 CS3
-┃   ┃   ┃ 	┃	┣ 📂 CS3_sess0x
-┃   ┃   ┃ 	┃	┃	┣ (same as CS1_sess0x)
-┃   ┃ 	┃	┣ 📂 CS4
-┃   ┃   ┃ 	┃	┣ 📂 CS4_sess0x
-┃   ┃   ┃ 	┃	┃	┣ (same as CS1_sess0x)
+┃   ┣ 📂 BOLD5000_GLMsingle_ROI_betas
+┃   ┃   ┣ 📂 py
+┃   ┃   ┃   ┗ CSI1_GLMbetas-TYPED-FITHRF-GLMDENOISE-RR_allses_LHEarlyVis.npy
+┃   ┃   ┃   ┗ ...
+┃   ┃   ┃   ┗ CSIx_GLMbetas-TYPED-FITHRF-GLMDENOISE-RR_allses_xx.npy
+┃   ┣ 📂 BOLD5000_Stimuli
+┃   ┃   ┣ 📂 Image_Labels
+┃   ┃   ┣ 📂 Scene_Stimuli
+┃   ┃   ┣ 📂 Stimuli_Presentation_Lists
 
 
 /pretrains
 ┣ 📂 ldm
-┃	┣ 📂 label2img
-┃ 	┃	┗ 📜 config.yaml
-┃ 	┃	┗ 📜 model.ckpt
-┃	┣ 📂 text2img-large
-┃ 	┃	┗ 📜 ...
-┃	┣ 📂 layout2img
-┃ 	┃	┗ 📜 ...
-┃	┣ 📂 semantic
-┃ 	┃	┗ 📜 ...
+┃   ┣ 📂 label2img  （ImageNet pre-trained label-conditioned LDM)
+┃   ┃   ┗ 📜 config.yaml
+┃   ┃   ┗ 📜 model.ckpt
 
-┣ 📂 GOD
-┃	┗ 📜 fmri_encoder.pth
-┃	┗ 📜 finetuned.pth
+┣ 📂 GOD  
+┃   ┗ 📜 fmri_encoder.pth  (SC-MBM pre-trained fMRI encoder)
+┃   ┗ 📜 finetuned.pth     (finetuned fMRI encoder + finetuned LDM)
 
 ┣ 📂 BOLD5000
-┃	┗ 📜 fmri_encoder.pth
-┃	┗ 📜 finetuned.pth
+┃   ┗ 📜 fmri_encoder.pth  (SC-MBM pre-trained fMRI encoder)
+┃   ┗ 📜 finetuned.pth     (finetuned fMRI encoder + finetuned LDM)
 
 
 /code
 ┣ 📂 sc_mbm
-┃	┗ 📜 mae_for_fmri.py
-┃	┗ 📜 trainer.py
-┃	┗ 📜 utils.py
+┃   ┗ 📜 mae_for_fmri.py
+┃   ┗ 📜 trainer.py
+┃   ┗ 📜 utils.py
 
 ┣ 📂 dc_ldm
-┃	┗ 📜 ldm_for_fmri.py
-┃	┗ 📜 utils.py
-┃	┣ 📂 models
-┃	┃	┗ (adopted from latent LDM)
-┃	┣ 📂 modules
-┃	┃	┗ (adopted from latent LDM)
+┃   ┗ 📜 ldm_for_fmri.py
+┃   ┗ 📜 utils.py
+┃   ┣ 📂 models
+┃   ┃   ┗ (adopted from LDM)
+┃   ┣ 📂 modules
+┃   ┃   ┗ (adopted from LDM)
 
-┗  📜 stageA1_mbm_pretrain.py (main script for pre-training for SC-MBM)
-┗  📜 stageA2_mbm_finetune.py (main script for fine-tuning SC-MBM)
-┗  📜 stageB_ldm_finetune.py (main script for fine-tuning DC-LDM)
-┗  📜 gen_eval.py (main script for evaluating model performance)
+┗  📜 stageA1_mbm_pretrain.py   (main script for pre-training for SC-MBM)
+┗  📜 stageA2_mbm_finetune.py   (main script for tuning SC-MBM on fMRI only from test sets)
+┗  📜 stageB_ldm_finetune.py    (main script for fine-tuning DC-LDM)
+┗  📜 gen_eval.py               (main script for generating decoded images)
 
-┗  📜 dataset.py (functions for loading datasets)
-┗  📜 eval_metrics.py (functions for evaluation metrics)
-┗  📜 config.py (configurations for the main scripts)
+┗  📜 dataset.py                (functions for loading datasets)
+┗  📜 eval_metrics.py           (functions for evaluation metrics)
+┗  📜 config.py                 (configurations for the main scripts)
 
 ```
 
@@ -121,60 +92,65 @@ File path | Description
 
 ## Setup Instructions
 ### Environment setup
-Create and activate conda environment named ```mind_vis``` from our ```env.yaml```
+Create and activate conda environment named ```mind-vis``` from our ```env.yaml```
 ```sh
-conda env create -f environment.yaml
-conda activate mind_vis
+conda env create -f env.yaml
+conda activate mind-vis
 ```
 
-### Download data, pre-trained model and replicate the whole framework
-To replicate the main result (i.e. **Full model**, Stage A + Stage B) shown in our submitted manuscript, please modify the file paths in ```xxx.sh``` and run
-```sh  
-sh ./mind-vis/scripts/xxxx
-```
-This script will automatically download the required data and pre-trained models in ```./mind-vis/data```  and ```./mind-vis/pretrains```. Results will be saved in ```./mind-vis/results```. The whole procedure took xxx days on a RTX3090 GPU (Stage A: xxx days; Stage B: xxx hours). 
+### Download data and checkpoints
+Due to the license issue, the full fMRI pre-training dataset needs to be downloaded from the [Human Connectome Projects (HCP)](https://www.humanconnectome.org/) offical website. The pre-processing scripts are also included in this repo. 
 
-### Replicate the result for **Stage A: Sparse-Coded Masked Brain Modelling**
-Please modify the file paths in ```xxx.sh``` and run
-```sh  
-sh ./mind-vis/scripts/xxxx
-```
-This script will automatically download the required data (HCP dataset and KAM dataset) in ```./mind-vis/data```. Results will be saved in ```./mind-vis/results/stageA_fmri_pretrain```. The pre-trained checkpoint for downstream image generation will be saved in ```./mind-vis/pretrains/fmri_pretrain```
-This stage took xxx days on a RTX3090 GPU (Stage A1: xxx days; Stage A2: xxx days). 
-
-### Replicate the result for **Stage B: Double-Conditioned Latent Diffusion Model**
-Please modify the file paths in ```xxx.sh``` and run
-```sh  
-sh ./mind-vis/scripts/xxxx
-```
-This script will automatically download the required pretrained LDM checkpoint in ```./mind-vis/pretrains/ldm```. Results will be saved in ```./mind-vis/results/stageB_image_generation```. The pre-trained checkpoint for downstream image generation will be saved in ```./mind-vis/pretrains/fmri_pretrain```
-This stage took xxx hours on a RTX3090 GPU. 
+We also provide checkpoints and finetuning data at [FigShare](https://figshare.com/s/94cd778e6afafb00946e) to run the finetuing and decoding directly. After downloading, extract the ```data/``` and ```pretrains/``` to the project directory. 
 
 
-
-### Replicate the result for ablation studies for Stage A
-Please modify the file paths in ```xxx.sh```, update the flag information and run
+### SC-MBM Pre-training on fMRI (Stage A)
+The fMRI pre-training is performed with masked brain modeling in the fMRI dataset containing around 136,000 fMRI samples from 1205 subjects (HCP + GOD). To perform the pre-training from scratch with defaults parameters, run 
 ```sh
-sh ./mind-vis/scripts/xxxx
-```
-e.g. update the flag information
+python code/stageA1_mbm_pretrain.py
+``` 
+
+Hyper-parameters can be changed with command line arguments,
 ```sh
-python xxx.py --flag1 a --flag2 b
+python code/stageA1_mbm_pretrain.py --mask_ratio 0.65 --num_epoch 800 --batch_size 200
 ```
-This script requires the datasets downloaded in ```./mind-vis/data```. Results will be saved in ```./mind-vis/results/stageA_ablation```. The pre-trained checkpoint for downstream image generation will be saved in ```./mind-vis/pretrains/fmri_pretrain```
+Or the parameters can also be changed in ```code/config.py```
 
-### Replicate the result for ablation studies for Stage B
-Please modify the file paths in ```xxx.sh```, update the flag information and run
+Multiple-GPU (DDP) training is supported, run with 
 ```sh
-sh ./mind-vis/scripts/xxxx
+python -m torch.distributed.launch --nproc_per_node=NUM_GPUS code/stageA1_mbm_pretrain.py
 ```
-e.g. update the flag information
+
+The pre-training results will be saved locally at ```results/fmri_pretrain``` and remotely at ```wandb```. 
+
+After pre-training on the large-scale fMRI dataset, we need to finetune the autoencoder with fMRI data from the testing set. Run the following, 
 ```sh
-python xxx.py --flag1 a --flag2 b
+python code/stageA2_mbm_finetune.py --dataset GOD --pretrain_mbm_path results/fmri_pretrain/RUN_FOLDER_NAME/checkpoints/checkpoint.pth
 ```
-This script requires the datasets downloaded in ```./mind-vis/data```; checkpoints trained and saved in ```./mind-vis/pretrains/fmri_pretrain```. Results will be saved in ```./mind-vis/results/stageB_ablation```. The pre-trained checkpoint for downstream image generation will be saved in ```./mind-vis/pretrains/fmri_pretrain```
-
-### Testing, evaluation and visualization
-The ```xxx.ipynb``` notebook in ```./mind-vis/scripts``` provides functionality for evaluating reconstruction quality via n-way identification experiments and FID score, and visualizing the reconstructed images.
+```--dataset``` can be either ```GOD``` or ```BOLD5000```. And ```RUN_FOLDER_NAME``` is the folder name generated for the pre-training e.g. ```01-08-2022-11:37:22```. The fMRI finetuning results will be saved locally at ```results/fmri_finetune``` and remotely at ```wandb```. 
 
 
+### Finetune the Double-Conditional LDM with Pre-trained fMRI Encoder (Stage B)
+In this stage, the cross-attention heads and pre-trained fMRI encoder will be jointly optimized with fMRI-image pairs. Decoded images will be generated in this stage. Run this stage with our provided pre-trained fMRI encoder and default parameters:
+```sh
+python code/stageB_ldm_finetune.py --dataset GOD
+```
+```--dataset``` can be either ```GOD``` or ```BOLD5000```. The results and generated samples will be saved locally at ```results/generation``` and remotely at ```wandb```.
+
+Run with custom-pre-trained fMRI encoder and parameters:
+```sh
+python code/stageB_ldm_finetune.py --dataset GOD --pretrain_mbm_path results/fmri_fintune/RUN_FOLDER_NAME/checkpoints/checkpoint.pth --num_epoch 500 --batch_size 5
+```
+
+
+### Run fMRI Decoding and Generate Images with Trained Checkpoints
+```sh
+python code/gen_eval.py --dataset GOD
+```
+```--dataset``` can be either ```GOD``` or ```BOLD5000```. The results and generated samples will be saved locally at ```results/eval``` and remotely at ```wandb```.
+
+## Acknowledgement
+- We thank [Kamitani Lab](https://github.com/KamitaniLab) and [
+Weizmann Vision Lab](https://github.com/WeizmannVision) for making their raw and pre-processed data public. 
+- We also thank [BOLD5000 team](https://bold5000-dataset.github.io/website/) for making their dataset public.
+- Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. And our Conditional Latent Diffusion Model implementation is based on implementation from [CompVis](https://github.com/CompVis/latent-diffusion). We thank these authors for making their codes and checkpoints publicly available!
