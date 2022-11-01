@@ -13,6 +13,9 @@ Our framework consists of two main stages:
 - Stage A: Sparse-Coded Masked Brain Modeling (*SC-MBM*)
 - Stage B: Double-Conditioned Latent Diffusion Model (*DC-LDM*)
 
+The **data** folder and **pretrains** folder are not included in this repository. 
+Please download them from [here](https://figshare.com/s/94cd778e6afafb00946e) and put them in the root directory of this repository as shown below.
+
 File path | Description
 ```
 
