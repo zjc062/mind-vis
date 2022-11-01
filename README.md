@@ -162,8 +162,5 @@ python code/gen_eval.py --dataset GOD
 ```--dataset``` can be either ```GOD``` or ```BOLD5000```. The results and generated samples will be saved locally at ```results/eval``` and remotely at ```wandb```.
 
 ## Acknowledgement
-- We thank [Kamitani Lab](https://github.com/KamitaniLab) and [
-Weizmann Vision Lab](https://github.com/WeizmannVision) for making their raw and pre-processed data public. 
-- We also thank [BOLD5000 team](https://bold5000-dataset.github.io/website/) for making their dataset public.
-- Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. 
-- Our Conditional Latent Diffusion Model implementation is based on the implementation from [CompVis](https://github.com/CompVis/latent-diffusion). We thank these authors for making their codes and checkpoints publicly available!
+We thank [Kamitani Lab](https://github.com/KamitaniLab) and [
+Weizmann Vision Lab](https://github.com/WeizmannVision) for making their raw and pre-processed data public. We also thank [BOLD5000 team](https://bold5000-dataset.github.io/website/) for making their dataset public. Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. Our Conditional Latent Diffusion Model implementation is based on the implementation from [CompVis](https://github.com/CompVis/latent-diffusion). We thank these authors for making their codes and checkpoints publicly available!

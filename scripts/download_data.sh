@@ -1,1 +1,0 @@
-wget xxx.zip -O data.zip
