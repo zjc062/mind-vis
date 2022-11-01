@@ -102,7 +102,7 @@ conda activate mind-vis
 ```
 
 ### Download data and checkpoints
-Due to size limi and license issue, the full fMRI pre-training dataset (required to relicate **Stage A**) needs to be downloaded from the [Human Connectome Projects (HCP)](https://db.humanconnectome.org/data/projects/HCP_1200) offical website. The pre-processing scripts are also included in this repo. 
+Due to size limi and license issue, the full fMRI pre-training dataset (required to replicate **Stage A**) needs to be downloaded from the [Human Connectome Projects (HCP)](https://db.humanconnectome.org/data/projects/HCP_1200) offical website. The pre-processing scripts are also included in this repo. 
 
 We also provide checkpoints and finetuning data at [FigShare](https://figshare.com/s/94cd778e6afafb00946e) to run the finetuing and decoding directly. After downloading, extract the ```data/``` and ```pretrains/``` to the project directory. 
 
