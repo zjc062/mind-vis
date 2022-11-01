@@ -102,7 +102,7 @@ conda activate mind-vis
 ```
 
 ### Download data and checkpoints
-Due to the license issue, the full fMRI pre-training dataset needs to be downloaded from the [Human Connectome Projects (HCP)](https://www.humanconnectome.org/) offical website. The pre-processing scripts are also included in this repo. 
+Due to size limi and license issue, the full fMRI pre-training dataset (required to relicate **Stage A**) needs to be downloaded from the [Human Connectome Projects (HCP)](https://db.humanconnectome.org/data/projects/HCP_1200) offical website. The pre-processing scripts are also included in this repo. 
 
 We also provide checkpoints and finetuning data at [FigShare](https://figshare.com/s/94cd778e6afafb00946e) to run the finetuing and decoding directly. After downloading, extract the ```data/``` and ```pretrains/``` to the project directory. 
 
@@ -117,6 +117,7 @@ Hyper-parameters can be changed with command line arguments,
 ```sh
 python code/stageA1_mbm_pretrain.py --mask_ratio 0.65 --num_epoch 800 --batch_size 200
 ```
+
 Or the parameters can also be changed in ```code/config.py```
 
 Multiple-GPU (DDP) training is supported, run with 
@@ -130,11 +131,17 @@ After pre-training on the large-scale fMRI dataset, we need to finetune the auto
 ```sh
 python code/stageA2_mbm_finetune.py --dataset GOD --pretrain_mbm_path results/fmri_pretrain/RUN_FOLDER_NAME/checkpoints/checkpoint.pth
 ```
-```--dataset``` can be either ```GOD``` or ```BOLD5000```. And ```RUN_FOLDER_NAME``` is the folder name generated for the pre-training e.g. ```01-08-2022-11:37:22```. The fMRI finetuning results will be saved locally at ```results/fmri_finetune``` and remotely at ```wandb```. 
+
+```--dataset``` can be either ```GOD``` or ```BOLD5000```. And ```RUN_FOLDER_NAME``` is the folder name generated for the pre-training. For example
+```
+python code/stageA2_mbm_finetune.py --dataset GOD --pretrain_mbm_path results/fmri_pretrain/01-08-2022-11:37:22/checkpoints/checkpoint.pth
+```
+
+The fMRI finetuning results will be saved locally at ```results/fmri_finetune``` and remotely at ```wandb```. 
 
 
 ### Finetune the Double-Conditional LDM with Pre-trained fMRI Encoder (Stage B)
-In this stage, the cross-attention heads and pre-trained fMRI encoder will be jointly optimized with fMRI-image pairs. Decoded images will be generated in this stage. Run this stage with our provided pre-trained fMRI encoder and default parameters:
+In this stage, the cross-attention heads and pre-trained fMRI encoder will be jointly optimized with fMRI-image pairs. Decoded images will be generated in this stage. This stage can be run without downloading HCP. Only finetuning datasets and pre-trained fMRI encoder shared in our FigShare link are required. Run this stage with our provided pre-trained fMRI encoder and default parameters:
 ```sh
 python code/stageB_ldm_finetune.py --dataset GOD
 ```
@@ -147,9 +154,11 @@ python code/stageB_ldm_finetune.py --dataset GOD --pretrain_mbm_path results/fmr
 
 
 ### Run fMRI Decoding and Generate Images with Trained Checkpoints
+Only finetuning datasets and trained checkpoints in our FigShare link are required. Run this stage with our provided checkpoints:
 ```sh
 python code/gen_eval.py --dataset GOD
 ```
+
 ```--dataset``` can be either ```GOD``` or ```BOLD5000```. The results and generated samples will be saved locally at ```results/eval``` and remotely at ```wandb```.
 
 ## Acknowledgement
