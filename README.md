@@ -1,4 +1,7 @@
 # Seeing Beyond the Brain: Masked Modeling Conditioned Diffusion Model for Human Vision Decoding
+<p align="center">
+<img src=assets/first_fig.png />
+</p>
 
 ## MinD-Vis
 **MinD-Vis** is a framework for decoding human visual stimuli from brain recording.
@@ -9,6 +12,7 @@ Decoding visual stimuli from brain recordings aims to deepen our understanding o
 
 
 ## Overview
+![flowchar-img](assets/flowchart_r.png)
 Our framework consists of two main stages:
 - Stage A: Sparse-Coded Masked Brain Modeling (*SC-MBM*)
 - Stage B: Double-Conditioned Latent Diffusion Model (*DC-LDM*)
@@ -92,22 +96,21 @@ File path | Description
 ```
 
 
-
-## Setup Instructions
-### Environment setup
+## Environment setup
 Create and activate conda environment named ```mind-vis``` from our ```env.yaml```
 ```sh
 conda env create -f env.yaml
 conda activate mind-vis
 ```
 
-### Download data and checkpoints
+## Download data and checkpoints
 Due to size limi and license issue, the full fMRI pre-training dataset (required to replicate **Stage A**) needs to be downloaded from the [Human Connectome Projects (HCP)](https://db.humanconnectome.org/data/projects/HCP_1200) offical website. The pre-processing scripts are also included in this repo. 
 
-We also provide checkpoints and finetuning data at [FigShare](https://figshare.com/s/94cd778e6afafb00946e) to run the finetuing and decoding directly. After downloading, extract the ```data/``` and ```pretrains/``` to the project directory. 
+We also provide checkpoints and finetuning data at [FigShare](https://figshare.com/s/94cd778e6afafb00946e) to run the finetuing and decoding directly. Due to the size limit, we only release the checkpoints for Subject 3 and CSI3 in the GOD and BOLD5000 respectively. Checkpoints for other subjects are also available upon request. After downloading, extract the ```data/``` and ```pretrains/``` to the project directory. 
 
 
-### SC-MBM Pre-training on fMRI (Stage A)
+## SC-MBM Pre-training on fMRI (Stage A)
+![mbm-fig](assets/mbm_mask.png)
 The fMRI pre-training is performed with masked brain modeling in the fMRI dataset containing around 136,000 fMRI samples from 1205 subjects (HCP + GOD). To perform the pre-training from scratch with defaults parameters, run 
 ```sh
 python code/stageA1_mbm_pretrain.py
@@ -140,7 +143,8 @@ python code/stageA2_mbm_finetune.py --dataset GOD --pretrain_mbm_path results/fm
 The fMRI finetuning results will be saved locally at ```results/fmri_finetune``` and remotely at ```wandb```. 
 
 
-### Finetune the Double-Conditional LDM with Pre-trained fMRI Encoder (Stage B)
+
+## Finetune the Double-Conditional LDM with Pre-trained fMRI Encoder (Stage B)
 In this stage, the cross-attention heads and pre-trained fMRI encoder will be jointly optimized with fMRI-image pairs. Decoded images will be generated in this stage. This stage can be run without downloading HCP. Only finetuning datasets and pre-trained fMRI encoder shared in our FigShare link are required. Run this stage with our provided pre-trained fMRI encoder and default parameters:
 ```sh
 python code/stageB_ldm_finetune.py --dataset GOD
@@ -153,13 +157,15 @@ python code/stageB_ldm_finetune.py --dataset GOD --pretrain_mbm_path results/fmr
 ```
 
 
-### Run fMRI Decoding and Generate Images with Trained Checkpoints
+## Run fMRI Decoding and Generate Images with Trained Checkpoints
 Only finetuning datasets and trained checkpoints in our FigShare link are required. Run this stage with our provided checkpoints:
 ```sh
 python code/gen_eval.py --dataset GOD
 ```
 
 ```--dataset``` can be either ```GOD``` or ```BOLD5000```. The results and generated samples will be saved locally at ```results/eval``` and remotely at ```wandb```.
+
+![bold5000](assets/bold5000.png)
 
 ## Acknowledgement
 We thank [Kamitani Lab](https://github.com/KamitaniLab) and [
