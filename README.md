@@ -14,7 +14,7 @@ Our framework consists of two main stages:
 - Stage B: Double-Conditioned Latent Diffusion Model (*DC-LDM*)
 
 The **data** folder and **pretrains** folder are not included in this repository. 
-Please download them from [here](https://figshare.com/s/94cd778e6afafb00946e) and put them in the root directory of this repository as shown below.
+Please download them from [FigShare](https://figshare.com/s/94cd778e6afafb00946e) and put them in the root directory of this repository as shown below.
 
 File path | Description
 ```
@@ -165,4 +165,5 @@ python code/gen_eval.py --dataset GOD
 - We thank [Kamitani Lab](https://github.com/KamitaniLab) and [
 Weizmann Vision Lab](https://github.com/WeizmannVision) for making their raw and pre-processed data public. 
 - We also thank [BOLD5000 team](https://bold5000-dataset.github.io/website/) for making their dataset public.
-- Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. And our Conditional Latent Diffusion Model implementation is based on implementation from [CompVis](https://github.com/CompVis/latent-diffusion). We thank these authors for making their codes and checkpoints publicly available!
+- Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. 
+- Our Conditional Latent Diffusion Model implementation is based on the implementation from [CompVis](https://github.com/CompVis/latent-diffusion). We thank these authors for making their codes and checkpoints publicly available!
