@@ -168,5 +168,5 @@ python code/gen_eval.py --dataset GOD
 ![bold5000](assets/bold5000.png)
 
 ## Acknowledgement
-We thank [Kamitani Lab](https://github.com/KamitaniLab) and [
-Weizmann Vision Lab](https://github.com/WeizmannVision) for making their raw and pre-processed data public. We also thank [BOLD5000 team](https://bold5000-dataset.github.io/website/) for making their dataset public. Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. Our Conditional Latent Diffusion Model implementation is based on the implementation from [CompVis](https://github.com/CompVis/latent-diffusion). We thank these authors for making their codes and checkpoints publicly available!
+We thank [Kamitani Lab](https://github.com/KamitaniLab), [
+Weizmann Vision Lab](https://github.com/WeizmannVision) and [BOLD5000 team](https://bold5000-dataset.github.io/website/) for making their raw and pre-processed data public. Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. Our Conditional Latent Diffusion Model implementation is based on the [Latent Diffusion Model](https://github.com/CompVis/latent-diffusion) implementation from CompVis. We thank these authors for making their codes and checkpoints publicly available!
