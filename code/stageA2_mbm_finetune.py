@@ -1,24 +1,24 @@
-import os, sys
-import numpy as np
-import torch
-from torch.utils.data import DataLoader
-from torch.nn.parallel import DistributedDataParallel
 import argparse
-import time
-import timm.optim.optim_factory as optim_factory
-import datetime
-import matplotlib.pyplot as plt
-import wandb
 import copy
+import datetime
+import os
+import sys
+import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+from timm.optim import optim_factory
+import torch
+import wandb
 # own code
 from config import Config_MBM_finetune
-from dataset import create_Kamitani_dataset, create_BOLD5000_dataset
+from dataset import create_BOLD5000_dataset, create_Kamitani_dataset
 from sc_mbm.mae_for_fmri import MAEforFMRI
-from sc_mbm.trainer import train_one_epoch
 from sc_mbm.trainer import NativeScalerWithGradNormCount as NativeScaler
+from sc_mbm.trainer import train_one_epoch
 from sc_mbm.utils import save_model
-
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data import DataLoader
 
 os.environ["WANDB_START_METHOD"] = "thread"
 os.environ['WANDB_DIR'] = "."
@@ -33,14 +33,14 @@ class wandb_logger:
 
         self.config = config
         self.step = None
-    
+
     def log(self, name, data, step=None):
         if step is None:
             wandb.log({name: data})
         else:
             wandb.log({name: data}, step=step)
             self.step = step
-    
+
     def watch_model(self, *args, **kwargs):
         wandb.watch(*args, **kwargs)
 
@@ -67,11 +67,11 @@ def get_args_parser():
     parser.add_argument('--root_path', type=str)
     parser.add_argument('--pretrain_mbm_path', type=str)
     parser.add_argument('--dataset', type=str)
-    parser.add_argument('--include_nonavg_test', type=bool)   
-    
+    parser.add_argument('--include_nonavg_test', type=bool)
+
     # distributed training parameters
     parser.add_argument('--local_rank', type=int)
-                        
+
     return parser
 
 def create_readme(config, path):
@@ -88,20 +88,20 @@ def fmri_transform(x, sparse_rate=0.2):
 
 def main(config):
     if torch.cuda.device_count() > 1:
-        torch.cuda.set_device(config.local_rank) 
+        torch.cuda.set_device(config.local_rank)
         torch.distributed.init_process_group(backend='nccl')
     sd = torch.load(config.pretrain_mbm_path, map_location='cpu')
     config_pretrain = sd['config']
-    
+
     output_path = os.path.join(config.root_path, 'results', 'fmri_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     # output_path = os.path.join(config.root_path, 'results', 'fmri_finetune')
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
-    
+
     if config.local_rank == 0:
         os.makedirs(output_path, exist_ok=True)
         create_readme(config, output_path)
-    
+
     device = torch.device(f'cuda:{config.local_rank}') if torch.cuda.is_available() else torch.device('cpu')
     torch.manual_seed(config_pretrain.seed)
     np.random.seed(config_pretrain.seed)
@@ -109,9 +109,9 @@ def main(config):
     # create model
     num_voxels = (sd['model']['pos_embed'].shape[1] - 1)* config_pretrain.patch_size
     model = MAEforFMRI(num_voxels=num_voxels, patch_size=config_pretrain.patch_size, embed_dim=config_pretrain.embed_dim,
-                    decoder_embed_dim=config_pretrain.decoder_embed_dim, depth=config_pretrain.depth, 
-                    num_heads=config_pretrain.num_heads, decoder_num_heads=config_pretrain.decoder_num_heads, 
-                    mlp_ratio=config_pretrain.mlp_ratio, focus_range=None, use_nature_img_loss=False) 
+                    decoder_embed_dim=config_pretrain.decoder_embed_dim, depth=config_pretrain.depth,
+                    num_heads=config_pretrain.num_heads, decoder_num_heads=config_pretrain.decoder_num_heads,
+                    mlp_ratio=config_pretrain.mlp_ratio, focus_range=None, use_nature_img_loss=False)
     model.load_state_dict(sd['model'], strict=False)
 
     model.to(device)
@@ -119,10 +119,10 @@ def main(config):
 
     # create dataset and dataloader
     if config.dataset == 'GOD':
-        _, test_set = create_Kamitani_dataset(path=config.kam_path, patch_size=config_pretrain.patch_size, 
+        _, test_set = create_Kamitani_dataset(path=config.kam_path, patch_size=config_pretrain.patch_size,
                                 subjects=config.kam_subs, fmri_transform=torch.FloatTensor, include_nonavg_test=config.include_nonavg_test)
     elif config.dataset == 'BOLD5000':
-        _, test_set = create_BOLD5000_dataset(path=config.bold5000_path, patch_size=config_pretrain.patch_size, 
+        _, test_set = create_BOLD5000_dataset(path=config.bold5000_path, patch_size=config_pretrain.patch_size,
                 fmri_transform=torch.FloatTensor, subjects=config.bold5000_subs, include_nonavg_test=config.include_nonavg_test)
     else:
         raise NotImplementedError
@@ -133,7 +133,7 @@ def main(config):
     else:
         test_set.fmri = test_set.fmri[:, :num_voxels]
     print(f'Dataset size: {len(test_set)}')
-    sampler = torch.utils.data.DistributedSampler(test_set) if torch.cuda.device_count() > 1 else torch.utils.data.RandomSampler(test_set) 
+    sampler = torch.utils.data.DistributedSampler(test_set) if torch.cuda.device_count() > 1 else torch.utils.data.RandomSampler(test_set)
     dataloader_hcp = DataLoader(test_set, batch_size=config.batch_size, sampler=sampler)
 
     if torch.cuda.device_count() > 1:
@@ -152,7 +152,7 @@ def main(config):
     start_time = time.time()
     print('Finetuning MAE on test fMRI ... ...')
     for ep in range(config.num_epoch):
-        if torch.cuda.device_count() > 1: 
+        if torch.cuda.device_count() > 1:
             sampler.set_epoch(ep) # to shuffle the data at every epoch
         cor = train_one_epoch(model, dataloader_hcp, optimizer, device, ep, loss_scaler, logger, config, start_time, model_without_ddp)
         cor_list.append(cor)
@@ -161,7 +161,7 @@ def main(config):
             save_model(config_pretrain, ep, model_without_ddp, optimizer, loss_scaler, os.path.join(output_path,'checkpoints'))
             # plot figures
             plot_recon_figures(model, device, test_set, output_path, 5, config, logger, model_without_ddp)
-            
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
@@ -224,4 +224,3 @@ if __name__ == '__main__':
     config = Config_MBM_finetune()
     config = update_config(args, config)
     main(config)
-    

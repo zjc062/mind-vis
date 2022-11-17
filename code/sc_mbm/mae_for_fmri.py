@@ -1,9 +1,10 @@
+import numpy as np
 import sc_mbm.utils as ut
 import torch
-import torch.nn as nn
-import numpy as np
-from timm.models.vision_transformer import Block
 import torch.nn.functional as F
+from timm.models.vision_transformer import Block
+from torch import nn
+
 
 class PatchEmbed1D(nn.Module):
     """ 1 Dimensional version of data (fmri voxels) to Patch Embedding
@@ -29,9 +30,9 @@ class MAEforFMRI(nn.Module):
     """ Masked Autoencoder with VisionTransformer backbone
     """
     def __init__(self, num_voxels=224, patch_size=16, embed_dim=1024, in_chans=1,
-                 depth=24, num_heads=16, decoder_embed_dim=512, 
+                 depth=24, num_heads=16, decoder_embed_dim=512,
                  decoder_depth=8, decoder_num_heads=16,
-                 mlp_ratio=4., norm_layer=nn.LayerNorm, focus_range=None, focus_rate=None, img_recon_weight=1.0, 
+                 mlp_ratio=4., norm_layer=nn.LayerNorm, focus_range=None, focus_rate=None, img_recon_weight=1.0,
                  use_nature_img_loss=False):
         super().__init__()
 
@@ -90,7 +91,7 @@ class MAEforFMRI(nn.Module):
         self.focus_rate = focus_rate
         self.img_recon_weight = img_recon_weight
         self.use_nature_img_loss = use_nature_img_loss
-   
+
         self.initialize_weights()
 
     def initialize_weights(self):
@@ -131,8 +132,8 @@ class MAEforFMRI(nn.Module):
             torch.nn.init.normal_(m.weight, std=.02)
             if m.bias is not None:
                 nn.init.constant_(m.bias, 0)
-    
-    
+
+
     def patchify(self, imgs):
         """
         imgs: (N, 1, num_voxels)
@@ -152,7 +153,7 @@ class MAEforFMRI(nn.Module):
         """
         p = self.patch_embed.patch_size
         h = x.shape[1]
-        
+
         imgs = x.reshape(shape=(x.shape[0], 1, h * p))
         return imgs
 
@@ -172,11 +173,11 @@ class MAEforFMRI(nn.Module):
                         ] = [self.focus_rate] * (self.focus_range[1] // self.patch_size - self.focus_range[0] // self.patch_size)
             weights = torch.tensor(weights).repeat(N, 1).to(x.device)
             ids_mask = torch.multinomial(weights, len_mask, replacement=False)
-            
+
         noise = torch.rand(N, L, device=x.device)  # noise in [0, 1]
         if self.focus_range is not None:
             for i in range(N):
-                noise[i, ids_mask[i,:]] = 1.1  # set mask portion to 1.1 
+                noise[i, ids_mask[i,:]] = 1.1  # set mask portion to 1.1
 
         # sort noise for each sample
         ids_shuffle = torch.argsort(noise, dim=1)  # ascend: small is keep, large is remove
@@ -267,27 +268,27 @@ class MAEforFMRI(nn.Module):
         x = x.view(x.shape[0], 512, 28, 28)
 
         return x # n, 512, 28, 28
-        
+
     def forward_nature_img_loss(self, inputs, reconstructions):
         loss = ((torch.tanh(inputs) - torch.tanh(reconstructions))**2).mean()
         if torch.isnan(reconstructions).sum():
             print('nan in reconstructions')
         if torch.isnan(inputs).sum():
             print('nan in inputs')
-    
-        return loss   
+
+        return loss
 
     def forward_loss(self, imgs, pred, mask):
         """
         imgs: [N, 1, num_voxels]
         pred: [N, L, p]
-        mask: [N, L], 0 is keep, 1 is remove, 
+        mask: [N, L], 0 is keep, 1 is remove,
         """
         target = self.patchify(imgs)
 
         loss = (pred - target) ** 2
         loss = loss.mean(dim=-1)  # [N, L], mean loss per patch
-        
+
         loss = (loss * mask).sum() / mask.sum()  if mask.sum() != 0 else (loss * mask).sum() # mean loss on removed patches
         return loss
 
@@ -304,7 +305,7 @@ class MAEforFMRI(nn.Module):
                 if torch.isnan(loss_nature_image_recon).sum():
                     print(loss_nature_image_recon)
                     print("loss_nature_image_recon is nan")
-                    
+
                 loss = loss + self.img_recon_weight*loss_nature_image_recon
 
         return loss, pred, mask
@@ -323,7 +324,7 @@ class fmri_encoder(nn.Module):
             Block(embed_dim, num_heads, mlp_ratio, qkv_bias=True, norm_layer=norm_layer)
             for i in range(depth)])
         self.norm = norm_layer(embed_dim)
-    
+
         self.mask_token = nn.Parameter(torch.zeros(1, 1, embed_dim))
         self.embed_dim = embed_dim
 
@@ -374,22 +375,22 @@ class fmri_encoder(nn.Module):
             x = x.mean(dim=1, keepdim=True)
         x = self.norm(x)
 
-        return x  
+        return x
 
     def forward(self, imgs):
         if imgs.ndim == 2:
             imgs = torch.unsqueeze(imgs, dim=0)  # N, n_seq, embed_dim
         latent = self.forward_encoder(imgs) # N, n_seq, embed_dim
         return latent # N, n_seq, embed_dim
-    
+
     def load_checkpoint(self, state_dict):
         if self.global_pool:
             state_dict = {k: v for k, v in state_dict.items() if ('mask_token' not in k and 'norm' not in k)}
         else:
-            state_dict = {k: v for k, v in state_dict.items() if ('mask_token' not in k)}
+            state_dict = {k: v for k, v in state_dict.items() if 'mask_token' not in k}
         ut.interpolate_pos_embed(self, state_dict)
-            
+
         m, u = self.load_state_dict(state_dict, strict=False)
         print('missing keys:', u)
         print('unexpected keys:', m)
-        return 
+        return

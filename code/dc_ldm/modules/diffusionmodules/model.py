@@ -1,12 +1,12 @@
 # pytorch_diffusion + derived encoder decoder
 import math
-import torch
-import torch.nn as nn
-import numpy as np
-from einops import rearrange
 
-from dc_ldm.util import instantiate_from_config
+import numpy as np
+import torch
+from torch import nn
 from dc_ldm.modules.attention import LinearAttention
+from dc_ldm.util import instantiate_from_config
+from einops import rearrange
 
 
 def get_timestep_embedding(timesteps, embedding_dim):
@@ -218,7 +218,8 @@ class Model(nn.Module):
                  attn_resolutions, dropout=0.0, resamp_with_conv=True, in_channels,
                  resolution, use_timestep=True, use_linear_attn=False, attn_type="vanilla"):
         super().__init__()
-        if use_linear_attn: attn_type = "linear"
+        if use_linear_attn:
+            attn_type = "linear"
         self.ch = ch
         self.temb_ch = self.ch*4
         self.num_resolutions = len(ch_mult)
@@ -371,7 +372,8 @@ class Encoder(nn.Module):
                  resolution, z_channels, double_z=True, use_linear_attn=False, attn_type="vanilla",
                  **ignore_kwargs):
         super().__init__()
-        if use_linear_attn: attn_type = "linear"
+        if use_linear_attn:
+            attn_type = "linear"
         self.ch = ch
         self.temb_ch = 0
         self.num_resolutions = len(ch_mult)
@@ -465,7 +467,8 @@ class Decoder(nn.Module):
                  resolution, z_channels, give_pre_end=False, tanh_out=False, use_linear_attn=False,
                  attn_type="vanilla", **ignorekwargs):
         super().__init__()
-        if use_linear_attn: attn_type = "linear"
+        if use_linear_attn:
+            attn_type = "linear"
         self.ch = ch
         self.temb_ch = 0
         self.num_resolutions = len(ch_mult)
@@ -832,4 +835,3 @@ class FirstStagePostProcessor(nn.Module):
         if self.do_reshape:
             z = rearrange(z,'b c h w -> b (h w) c')
         return z
-

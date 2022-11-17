@@ -6,28 +6,34 @@ https://github.com/CompVis/taming-transformers
 -- merci
 """
 import os
-import torch
-import torch.nn as nn
-import numpy as np
-import pytorch_lightning as pl
-from torch.optim.lr_scheduler import LambdaLR
-from einops import rearrange, repeat
 from contextlib import contextmanager
 from functools import partial
-from tqdm import tqdm
-from torchvision.utils import make_grid
-from pytorch_lightning.utilities.distributed import rank_zero_only
 
-from dc_ldm.util import log_txt_as_img, exists, default, ismap, isimage, mean_flat, count_params, instantiate_from_config
-from dc_ldm.modules.ema import LitEma
-from dc_ldm.modules.distributions.distributions import normal_kl, DiagonalGaussianDistribution
-from dc_ldm.models.autoencoder import VQModelInterface, IdentityFirstStage, AutoencoderKL
-from dc_ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
+import numpy as np
+import pytorch_lightning as pl
+import torch
+from torch import nn
+import torch.nn.functional as F
+from torch.optim.lr_scheduler import LambdaLR
+from dc_ldm.models.autoencoder import (AutoencoderKL, IdentityFirstStage,
+                                       VQModelInterface)
 from dc_ldm.models.diffusion.ddim import DDIMSampler
 from dc_ldm.models.diffusion.plms import PLMSSampler
-from PIL import Image
-import torch.nn.functional as F
+from dc_ldm.modules.diffusionmodules.util import (extract_into_tensor,
+                                                  make_beta_schedule,
+                                                  noise_like)
+from dc_ldm.modules.distributions.distributions import (
+    DiagonalGaussianDistribution, normal_kl)
+from dc_ldm.modules.ema import LitEma
+from dc_ldm.util import (count_params, default, exists,
+                         instantiate_from_config, isimage, ismap,
+                         log_txt_as_img, mean_flat)
+from einops import rearrange, repeat
 from eval_metrics import get_similarity_metric
+from PIL import Image
+from pytorch_lightning.utilities.distributed import rank_zero_only
+from torchvision.utils import make_grid
+from tqdm import tqdm
 
 __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
@@ -121,14 +127,14 @@ class DDPM(pl.LightningModule):
         self.return_cond = False
         self.output_path = None
         self.main_config = None
-        self.best_val = 0.0 
+        self.best_val = 0.0
         self.run_full_validation_threshold = 0.0
         self.eval_avg = True
 
     def re_init_ema(self):
         if self.use_ema:
             self.model_ema = LitEma(self.model)
-            print(f"Keeping EMAs of {len(list(self.model_ema.buffers()))}.")   
+            print(f"Keeping EMAs of {len(list(self.model_ema.buffers()))}.")
 
     def register_schedule(self, given_betas=None, beta_schedule="linear", timesteps=1000,
                           linear_start=1e-4, linear_end=2e-2, cosine_s=8e-3):
@@ -358,7 +364,7 @@ class DDPM(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         self.train()
         self.cond_stage_model.train()
-            
+
         loss, loss_dict = self.shared_step(batch)
 
         self.log_dict(loss_dict, prog_bar=True,
@@ -370,13 +376,13 @@ class DDPM(pl.LightningModule):
 
         return loss
 
-    
+
     @torch.no_grad()
     def generate(self, data, num_samples, ddim_steps=300, HW=None, limit=None, state=None):
         # fmri_embedding: n, seq_len, embed_dim
         all_samples = []
         if HW is None:
-            shape = (self.p_channels, 
+            shape = (self.p_channels,
                 self.p_image_size, self.p_image_size)
         else:
             num_resolutions = len(self.ch_mult)
@@ -396,7 +402,7 @@ class DDPM(pl.LightningModule):
 
         # rng = torch.Generator(device=self.device).manual_seed(2022).set_state(state)
 
-        # state = torch.cuda.get_rng_state()    
+        # state = torch.cuda.get_rng_state()
         with model.ema_scope():
             for count, item in enumerate(zip(data['fmri'], data['image'])):
                 if limit is not None:
@@ -406,7 +412,7 @@ class DDPM(pl.LightningModule):
                 gt_image = rearrange(item[1], 'h w c -> 1 c h w') # h w c
                 print(f"rendering {num_samples} examples in {ddim_steps} steps.")
                 c = model.get_learned_conditioning(repeat(latent, 'h w -> c h w', c=num_samples).to(self.device))
-                samples_ddim, _ = sampler.sample(S=ddim_steps, 
+                samples_ddim, _ = sampler.sample(S=ddim_steps,
                                                 conditioning=c,
                                                 batch_size=num_samples,
                                                 shape=shape,
@@ -416,9 +422,9 @@ class DDPM(pl.LightningModule):
                 x_samples_ddim = model.decode_first_stage(samples_ddim)
                 x_samples_ddim = torch.clamp((x_samples_ddim+1.0)/2.0,min=0.0, max=1.0)
                 gt_image = torch.clamp((gt_image+1.0)/2.0,min=0.0, max=1.0)
-                
+
                 all_samples.append(torch.cat([gt_image.detach().cpu(), x_samples_ddim.detach().cpu()], dim=0)) # put groundtruth at first
-        
+
         # display as grid
         grid = torch.stack(all_samples, 0)
         grid = rearrange(grid, 'n b c h w -> (n b) c h w')
@@ -434,9 +440,9 @@ class DDPM(pl.LightningModule):
             for sp_idx, imgs in enumerate(all_samples):
                 for copy_idx, img in enumerate(imgs[1:]):
                     img = rearrange(img, 'c h w -> h w c')
-                    Image.fromarray(img).save(os.path.join(self.output_path, 'val', 
+                    Image.fromarray(img).save(os.path.join(self.output_path, 'val',
                                     f'{self.validation_count}_{suffix}', f'test{sp_idx}-{copy_idx}.png'))
-                                    
+
     def full_validation(self, batch, state=None):
         print('###### run full validation! ######\n')
         grid, all_samples, state = self.generate(batch, ddim_steps=self.ddim_steps, num_samples=5, limit=None, state=state)
@@ -445,7 +451,7 @@ class DDPM(pl.LightningModule):
         metric_dict = {f'val/{k}_full':v for k, v in zip(metric_list, metric)}
         self.logger.log_metrics(metric_dict)
         grid_imgs = Image.fromarray(grid.astype(np.uint8))
-        self.logger.log_image(key=f'samples_test_full', images=[grid_imgs])
+        self.logger.log_image(key='samples_test_full', images=[grid_imgs])
         if metric[-1] > self.best_val:
             self.best_val = metric[-1]
             torch.save(
@@ -462,14 +468,14 @@ class DDPM(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         if batch_idx != 0:
             return
-        
+
         if self.validation_count % 15 == 0 and self.trainer.current_epoch != 0:
             self.full_validation(batch)
         else:
             grid, all_samples, state = self.generate(batch, ddim_steps=self.ddim_steps, num_samples=3, limit=5)
             metric, metric_list = self.get_eval_metric(all_samples, avg=self.eval_avg)
             grid_imgs = Image.fromarray(grid.astype(np.uint8))
-            self.logger.log_image(key=f'samples_test', images=[grid_imgs])
+            self.logger.log_image(key='samples_test', images=[grid_imgs])
             metric_dict = {f'val/{k}':v for k, v in zip(metric_list, metric)}
             self.logger.log_metrics(metric_dict)
             if metric[-1] > self.run_full_validation_threshold:
@@ -479,7 +485,7 @@ class DDPM(pl.LightningModule):
     def get_eval_metric(self, samples, avg=True):
         metric_list = ['mse', 'pcc', 'ssim', 'psm']
         res_list = []
-        
+
         gt_images = [img[0] for img in samples]
         gt_images = rearrange(np.stack(gt_images), 'n c h w -> n h w c')
         samples_to_run = np.arange(1, len(samples[0])) if avg else [1]
@@ -490,12 +496,12 @@ class DDPM(pl.LightningModule):
                 pred_images = rearrange(np.stack(pred_images), 'n c h w -> n h w c')
                 res = get_similarity_metric(pred_images, gt_images, method='pair-wise', metric_name=m)
                 res_part.append(np.mean(res))
-            res_list.append(np.mean(res_part))     
+            res_list.append(np.mean(res_part))
         res_part = []
         for s in samples_to_run:
             pred_images = [img[s] for img in samples]
             pred_images = rearrange(np.stack(pred_images), 'n c h w -> n h w c')
-            res = get_similarity_metric(pred_images, gt_images, 'class', None, 
+            res = get_similarity_metric(pred_images, gt_images, 'class', None,
                             n_way=50, num_trials=50, top_k=1, device='cuda')
             res_part.append(np.mean(res))
         res_list.append(np.mean(res_part))
@@ -503,7 +509,7 @@ class DDPM(pl.LightningModule):
         metric_list.append('top-1-class')
         metric_list.append('top-1-class (max)')
 
-        return res_list, metric_list    
+        return res_list, metric_list
 
     def on_train_batch_end(self, *args, **kwargs):
         if self.use_ema:
@@ -593,7 +599,7 @@ class LatentDiffusion(DDPM):
         self.cond_stage_key = cond_stage_key
         try:
             self.num_downs = len(first_stage_config.params.ddconfig.ch_mult) - 1
-        except:
+        except Exception:
             self.num_downs = 0
         if not scale_by_std:
             self.scale_factor = scale_factor
@@ -601,17 +607,17 @@ class LatentDiffusion(DDPM):
             self.register_buffer('scale_factor', torch.tensor(scale_factor))
         self.instantiate_first_stage(first_stage_config)
         self.instantiate_cond_stage(cond_stage_config)
-      
+
         self.cond_stage_forward = cond_stage_forward
         self.clip_denoised = False
-        self.bbox_tokenizer = None  
+        self.bbox_tokenizer = None
 
         self.restarted_from_ckpt = False
         if ckpt_path is not None:
             self.init_from_ckpt(ckpt_path, ignore_keys)
             self.restarted_from_ckpt = True
         self.train_cond_stage_only = False
-        
+
 
     def make_cond_schedule(self, ):
         self.cond_ids = torch.full(size=(self.num_timesteps,), fill_value=self.num_timesteps - 1, dtype=torch.long)
@@ -663,7 +669,6 @@ class LatentDiffusion(DDPM):
     def unfreeze_cond_stage(self):
         for param in self.cond_stage_model.parameters():
             param.requires_grad = True
-   
 
     def freeze_first_stage(self):
         self.first_stage_model.trainable = False
@@ -684,7 +689,7 @@ class LatentDiffusion(DDPM):
         self.first_stage_model.trainable = True
         for param in self.parameters():
             param.requires_grad = True
-        
+
     def instantiate_cond_stage(self, config):
         if not self.cond_stage_trainable:
             if config == "__is_first_stage__":
@@ -967,7 +972,7 @@ class LatentDiffusion(DDPM):
                 z = z.view((z.shape[0], -1, ks[0], ks[1], z.shape[-1]))  # (bn, nc, ks[0], ks[1], L )
 
                 # 2. apply model loop over last dim
-                if isinstance(self.first_stage_model, VQModelInterface):  
+                if isinstance(self.first_stage_model, VQModelInterface):
                     output_list = [self.first_stage_model.decode(z[:, :, :, :, i],
                                                                  force_not_quantize=predict_cids or force_not_quantize)
                                    for i in range(z.shape[-1])]
@@ -1006,7 +1011,7 @@ class LatentDiffusion(DDPM):
         if self.return_cond:
             loss, cc = self(x, c)
             return loss, cc
-        else:    
+        else:
             loss = self(x, c)
             return loss
 
@@ -1210,8 +1215,10 @@ class LatentDiffusion(DDPM):
 
             if i % log_every_t == 0 or i == timesteps - 1:
                 intermediates.append(x0_partial)
-            if callback: callback(i)
-            if img_callback: img_callback(img, i)
+            if callback:
+                callback(i)
+            if img_callback:
+                img_callback(img, i)
         return img, intermediates
 
     @torch.no_grad()
@@ -1258,8 +1265,10 @@ class LatentDiffusion(DDPM):
 
             if i % log_every_t == 0 or i == timesteps - 1:
                 intermediates.append(img)
-            if callback: callback(i)
-            if img_callback: img_callback(img, i)
+            if callback:
+                callback(i)
+            if img_callback:
+                img_callback(img, i)
 
         if return_intermediates:
             return img, intermediates
@@ -1414,14 +1423,14 @@ class LatentDiffusion(DDPM):
         lr = self.learning_rate
         if self.train_cond_stage_only:
             print(f"{self.__class__.__name__}: Only optimizing conditioner params!")
-            cond_parms = [p for n, p in self.named_parameters() 
+            cond_parms = [p for n, p in self.named_parameters()
                     if 'attn2' in n or 'time_embed_condtion' in n or 'norm2' in n]
-            # cond_parms = [p for n, p in self.named_parameters() 
+            # cond_parms = [p for n, p in self.named_parameters()
             #         if 'time_embed_condtion' in n]
             # cond_parms = []
-            
+
             params = list(self.cond_stage_model.parameters()) + cond_parms
-        
+
             for p in params:
                 p.requires_grad = True
 
@@ -1448,7 +1457,7 @@ class LatentDiffusion(DDPM):
                     'frequency': 1
                 }]
             return [opt], scheduler
-            
+
         return opt
 
     @torch.no_grad()

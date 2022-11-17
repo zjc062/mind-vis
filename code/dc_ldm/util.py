@@ -1,9 +1,8 @@
 import importlib
-
-import torch
-import numpy as np
-
 from inspect import isfunction
+
+import numpy as np
+import torch
 from PIL import Image, ImageDraw, ImageFont
 
 

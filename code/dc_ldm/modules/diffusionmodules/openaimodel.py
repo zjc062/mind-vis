@@ -1,25 +1,19 @@
+import math
 from abc import abstractmethod
 from functools import partial
-import math
 from typing import Iterable
 
 import numpy as np
-import torch as th
-import torch.nn as nn
-import torch.nn.functional as F
 import torch
-
-
-from dc_ldm.modules.diffusionmodules.util import (
-    checkpoint,
-    conv_nd,
-    linear,
-    avg_pool_nd,
-    zero_module,
-    normalization,
-    timestep_embedding,
-)
+import torch as th
+from torch import nn
+import torch.nn.functional as F
 from dc_ldm.modules.attention import SpatialTransformer
+from dc_ldm.modules.diffusionmodules.util import (avg_pool_nd, checkpoint,
+                                                  conv_nd, linear,
+                                                  normalization,
+                                                  timestep_embedding,
+                                                  zero_module)
 
 
 # dummy replace
@@ -519,7 +513,7 @@ class UNetModel(nn.Module):
 
         if self.num_classes is not None:
             self.label_emb = nn.Embedding(num_classes, time_embed_dim)
-            
+
         # self.time_embed_condtion = nn.Linear(context_dim, time_embed_dim, bias=False)
         if use_time_cond:
             self.time_embed_condtion = nn.Sequential(
@@ -527,7 +521,7 @@ class UNetModel(nn.Module):
                 nn.Conv1d(77//2, 1, 1, bias=True),
                 nn.Linear(context_dim, time_embed_dim, bias=True)
             ) if global_pool == False else nn.Linear(context_dim, time_embed_dim, bias=True)
-       
+
         self.input_blocks = nn.ModuleList(
             [
                 TimestepEmbedSequential(
@@ -977,4 +971,3 @@ class EncoderUNetModel(nn.Module):
         else:
             h = h.type(x.dtype)
             return self.out(h)
-

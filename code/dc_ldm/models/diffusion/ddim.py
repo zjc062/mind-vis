@@ -1,14 +1,15 @@
 """SAMPLING ONLY."""
 
-import torch
-import numpy as np
-from tqdm import tqdm
 from functools import partial
 
-from dc_ldm.modules.diffusionmodules.util import make_ddim_sampling_parameters, make_ddim_timesteps, noise_like
+import numpy as np
+import torch
+from dc_ldm.modules.diffusionmodules.util import (
+    make_ddim_sampling_parameters, make_ddim_timesteps, noise_like)
+from tqdm import tqdm
 
 
-class DDIMSampler(object):
+class DDIMSampler():
     def __init__(self, model, schedule="linear", **kwargs):
         super().__init__()
         self.model = model
@@ -153,8 +154,10 @@ class DDIMSampler(object):
                                       unconditional_guidance_scale=unconditional_guidance_scale,
                                       unconditional_conditioning=unconditional_conditioning)
             img, pred_x0 = outs
-            if callback: callback(i)
-            if img_callback: img_callback(pred_x0, i)
+            if callback:
+                callback(i)
+            if img_callback:
+                img_callback(pred_x0, i)
 
             if index % log_every_t == 0 or index == total_steps - 1:
                 intermediates['x_inter'].append(img)

@@ -1,7 +1,9 @@
-import numpy as np
 import math
-import torch
 import os
+
+import numpy as np
+import torch
+
 
 def get_1d_sincos_pos_embed(embed_dim, length, cls_token=False):
     """
@@ -71,7 +73,7 @@ def interpolate_pos_embed(model, checkpoint_model):
 def adjust_learning_rate(optimizer, epoch, config):
     """Decay the learning rate with half-cycle cosine after warmup"""
     if epoch < config.warmup_epochs:
-        lr = config.lr * epoch / config.warmup_epochs 
+        lr = config.lr * epoch / config.warmup_epochs
     else:
         lr = config.min_lr + (config.lr - config.min_lr) * 0.5 * \
             (1. + math.cos(math.pi * (epoch - config.warmup_epochs) / (config.num_epoch - config.warmup_epochs)))
@@ -93,7 +95,7 @@ def save_model(config, epoch, model, optimizer, loss_scaler, checkpoint_paths):
         'config': config,
     }
     torch.save(to_save, os.path.join(checkpoint_paths, 'checkpoint.pth'))
-    
+
 
 def load_model(config, model, checkpoint_path ):
     checkpoint = torch.load(checkpoint_path, map_location='cpu')
@@ -119,6 +121,6 @@ def unpatchify(x, patch_size):
     """
     p = patch_size
     h = x.shape[1]
-    
+
     imgs = x.reshape(shape=(x.shape[0], 1, h * p))
     return imgs

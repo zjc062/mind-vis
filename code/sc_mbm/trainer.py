@@ -1,9 +1,12 @@
-import math, sys
-import torch
-import sc_mbm.utils as ut
-from torch._six import inf
-import numpy as np
+import math
+import sys
 import time
+
+import numpy as np
+import sc_mbm.utils as ut
+import torch
+from torch._six import inf
+
 
 class NativeScalerWithGradNormCount:
     state_dict_key = "amp_scaler"
@@ -49,8 +52,8 @@ def get_grad_norm_(parameters, norm_type: float = 2.0):
     return total_norm
 
 
-def train_one_epoch(model, data_loader, optimizer, device, epoch, 
-                        loss_scaler,log_writer=None, config=None, start_time=None, model_without_ddp=None, 
+def train_one_epoch(model, data_loader, optimizer, device, epoch,
+                        loss_scaler,log_writer=None, config=None, start_time=None, model_without_ddp=None,
                         img_feature_extractor=None, preprocess=None):
     model.train(True)
     optimizer.zero_grad()
@@ -58,12 +61,12 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
     total_cor = []
     accum_iter = config.accum_iter
     for data_iter_step, (data_dcit) in enumerate(data_loader):
-        
+
         # we use a per iteration (instead of per epoch) lr scheduler
         if data_iter_step % accum_iter == 0:
             ut.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, config)
         samples = data_dcit['fmri']
-        
+
         img_features = None
         valid_idx = None
         if img_feature_extractor is not None:
@@ -109,7 +112,7 @@ def train_one_epoch(model, data_loader, optimizer, device, epoch,
         log_writer.log('cor', np.mean(total_cor), step=epoch)
         if start_time is not None:
             log_writer.log('time (min)', (time.time() - start_time)/60.0, step=epoch)
-    if config.local_rank == 0:        
+    if config.local_rank == 0:
         print(f'[Epoch {epoch}] loss: {np.mean(total_loss)}')
 
     return np.mean(total_cor)

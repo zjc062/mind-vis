@@ -1,13 +1,13 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+from dc_ldm.util import exists
 from einops import repeat
-
-from taming.modules.discriminator.model import NLayerDiscriminator, weights_init
+from taming.modules.discriminator.model import (NLayerDiscriminator,
+                                                weights_init)
 from taming.modules.losses.lpips import LPIPS
 from taming.modules.losses.vqperceptual import hinge_d_loss, vanilla_d_loss
+from torch import nn
 
-from dc_ldm.util import exists
 
 def hinge_d_loss_with_exemplar_weights(logits_real, logits_fake, weights):
     assert weights.shape[0] == logits_real.shape[0] == logits_fake.shape[0]
@@ -112,7 +112,7 @@ class VQLPIPSWithDiscriminator(nn.Module):
         nll_loss = rec_loss
         #nll_loss = torch.sum(nll_loss) / nll_loss.shape[0]
         nll_loss = torch.mean(nll_loss)
-        
+
         if optimizer_idx == 2:
             log = {
                    "{}/nll_loss".format(split): nll_loss.detach().mean(),
