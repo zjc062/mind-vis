@@ -1,17 +1,18 @@
 import os
-import torch
+from copy import deepcopy
+from glob import glob
+
 import pytorch_lightning as pl
+import torch
+from dc_ldm.modules.diffusionmodules.openaimodel import (EncoderUNetModel,
+                                                         UNetModel)
+from dc_ldm.util import default, instantiate_from_config, ismap, log_txt_as_img
+from einops import rearrange
+from natsort import natsorted
 from omegaconf import OmegaConf
 from torch.nn import functional as F
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
-from copy import deepcopy
-from einops import rearrange
-from glob import glob
-from natsort import natsorted
-
-from dc_ldm.modules.diffusionmodules.openaimodel import EncoderUNetModel, UNetModel
-from dc_ldm.util import log_txt_as_img, default, ismap, instantiate_from_config
 
 __models__ = {
     'class_label': EncoderUNetModel,

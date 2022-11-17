@@ -1,7 +1,7 @@
 import torch
-import torch.nn as nn
-
+from torch import nn
 from taming.modules.losses.vqperceptual import *  # TODO: taming dependency yes/no?
+
 # from vqperceptual import *  # replace taming dependency to local vqperceptual.py
 
 
@@ -109,4 +109,3 @@ class LPIPSWithDiscriminator(nn.Module):
                    "{}/logits_fake".format(split): logits_fake.detach().mean()
                    }
             return d_loss, log
-

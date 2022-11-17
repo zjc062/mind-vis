@@ -1,22 +1,23 @@
-import os, sys
-import numpy as np
-import torch
-from torch.utils.data import DataLoader
-from torch.nn.parallel import DistributedDataParallel
 import argparse
-import time
-import timm.optim.optim_factory as optim_factory
-import datetime
-import matplotlib.pyplot as plt
-import wandb
 import copy
+import datetime
+import os
+import sys
+import time
 
+import matplotlib.pyplot as plt
+import numpy as np
+from timm.optim import optim_factory
+import torch
+import wandb
 from config import Config_MBM_fMRI
 from dataset import hcp_dataset
 from sc_mbm.mae_for_fmri import MAEforFMRI
-from sc_mbm.trainer import train_one_epoch
 from sc_mbm.trainer import NativeScalerWithGradNormCount as NativeScaler
+from sc_mbm.trainer import train_one_epoch
 from sc_mbm.utils import save_model
+from torch.nn.parallel import DistributedDataParallel
+from torch.utils.data import DataLoader
 
 os.environ["WANDB_START_METHOD"] = "thread"
 os.environ['WANDB_DIR'] = "."
@@ -32,14 +33,14 @@ class wandb_logger:
 
         self.config = config
         self.step = None
-    
+
     def log(self, name, data, step=None):
         if step is None:
             wandb.log({name: data})
         else:
             wandb.log({name: data}, step=step)
             self.step = step
-    
+
     def watch_model(self, *args, **kwargs):
         wandb.watch(*args, **kwargs)
 
@@ -54,7 +55,7 @@ class wandb_logger:
 
 def get_args_parser():
     parser = argparse.ArgumentParser('MBM pre-training for fMRI', add_help=False)
-    
+
     # Training Parameters
     parser.add_argument('--lr', type=float)
     parser.add_argument('--weight_decay', type=float)
@@ -83,10 +84,10 @@ def get_args_parser():
 
     parser.add_argument('--use_nature_img_loss', type=bool)
     parser.add_argument('--img_recon_weight', type=float)
-    
+
     # distributed training parameters
     parser.add_argument('--local_rank', type=int)
-                        
+
     return parser
 
 def create_readme(config, path):
@@ -103,39 +104,39 @@ def fmri_transform(x, sparse_rate=0.2):
 
 def main(config):
     if torch.cuda.device_count() > 1:
-        torch.cuda.set_device(config.local_rank) 
+        torch.cuda.set_device(config.local_rank)
         torch.distributed.init_process_group(backend='nccl')
     output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     # output_path = os.path.join(config.root_path, 'results', 'fmri_pretrain')
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
-    
+
     if config.local_rank == 0:
         os.makedirs(output_path, exist_ok=True)
         create_readme(config, output_path)
-    
+
     device = torch.device(f'cuda:{config.local_rank}') if torch.cuda.is_available() else torch.device('cpu')
     torch.manual_seed(config.seed)
     np.random.seed(config.seed)
 
     # create dataset and dataloader
     dataset_pretrain = hcp_dataset(path=os.path.join(config.root_path, 'data/HCP/npz'), roi=config.roi, patch_size=config.patch_size,
-                transform=fmri_transform, aug_times=config.aug_times, num_sub_limit=config.num_sub_limit, 
+                transform=fmri_transform, aug_times=config.aug_times, num_sub_limit=config.num_sub_limit,
                 include_kam=config.include_kam, include_hcp=config.include_hcp)
-   
-    print(f'Dataset size: {len(dataset_pretrain)}\nNumber of voxels: {dataset_pretrain.num_voxels}')
-    sampler = torch.utils.data.DistributedSampler(dataset_pretrain, rank=config.local_rank) if torch.cuda.device_count() > 1 else None 
 
-    dataloader_hcp = DataLoader(dataset_pretrain, batch_size=config.batch_size, sampler=sampler, 
+    print(f'Dataset size: {len(dataset_pretrain)}\nNumber of voxels: {dataset_pretrain.num_voxels}')
+    sampler = torch.utils.data.DistributedSampler(dataset_pretrain, rank=config.local_rank) if torch.cuda.device_count() > 1 else None
+
+    dataloader_hcp = DataLoader(dataset_pretrain, batch_size=config.batch_size, sampler=sampler,
                 shuffle=(sampler is None), pin_memory=True)
 
     # create model
     config.num_voxels = dataset_pretrain.num_voxels
     model = MAEforFMRI(num_voxels=dataset_pretrain.num_voxels, patch_size=config.patch_size, embed_dim=config.embed_dim,
-                    decoder_embed_dim=config.decoder_embed_dim, depth=config.depth, 
+                    decoder_embed_dim=config.decoder_embed_dim, depth=config.depth,
                     num_heads=config.num_heads, decoder_num_heads=config.decoder_num_heads, mlp_ratio=config.mlp_ratio,
-                    focus_range=config.focus_range, focus_rate=config.focus_rate, 
-                    img_recon_weight=config.img_recon_weight, use_nature_img_loss=config.use_nature_img_loss)   
+                    focus_range=config.focus_range, focus_rate=config.focus_rate,
+                    img_recon_weight=config.img_recon_weight, use_nature_img_loss=config.use_nature_img_loss)
     model.to(device)
     model_without_ddp = model
     if torch.cuda.device_count() > 1:
@@ -156,17 +157,18 @@ def main(config):
     img_feature_extractor = None
     preprocess = None
     if config.use_nature_img_loss:
-        from torchvision.models import resnet50, ResNet50_Weights
-        from torchvision.models.feature_extraction import create_feature_extractor
+        from torchvision.models import ResNet50_Weights, resnet50
+        from torchvision.models.feature_extraction import \
+            create_feature_extractor
         weights = ResNet50_Weights.DEFAULT
         preprocess = weights.transforms()
-        m = resnet50(weights=weights)   
-        img_feature_extractor = create_feature_extractor(m, return_nodes={f'layer2': 'layer2'}).to(device).eval()
+        m = resnet50(weights=weights)
+        img_feature_extractor = create_feature_extractor(m, return_nodes={'layer2': 'layer2'}).to(device).eval()
         for param in img_feature_extractor.parameters():
             param.requires_grad = False
 
     for ep in range(config.num_epoch):
-        if torch.cuda.device_count() > 1: 
+        if torch.cuda.device_count() > 1:
             sampler.set_epoch(ep) # to shuffle the data at every epoch
         cor = train_one_epoch(model, dataloader_hcp, optimizer, device, ep, loss_scaler, logger, config, start_time, model_without_ddp,
                             img_feature_extractor, preprocess)
@@ -176,7 +178,7 @@ def main(config):
             save_model(config, ep, model_without_ddp, optimizer, loss_scaler, os.path.join(output_path,'checkpoints'))
             # plot figures
             plot_recon_figures(model, device, dataset_pretrain, output_path, 5, config, logger, model_without_ddp)
-            
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))

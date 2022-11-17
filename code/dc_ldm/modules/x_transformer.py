@@ -1,11 +1,12 @@
 """shout-out to https://github.com/lucidrains/x-transformers/tree/main/x_transformers"""
-import torch
-from torch import nn, einsum
-import torch.nn.functional as F
+from collections import namedtuple
 from functools import partial
 from inspect import isfunction
-from collections import namedtuple
-from einops import rearrange, repeat, reduce
+
+import torch
+import torch.nn.functional as F
+from einops import rearrange, reduce, repeat
+from torch import einsum, nn
 
 # constants
 
@@ -609,7 +610,7 @@ class TransformerWrapper(nn.Module):
         b = x.shape[0]
         device = x.device
         num_mem = self.num_memory_tokens
-        
+
         x = self.token_emb(x)
         x += self.pos_emb(x)
         x = self.emb_dropout(x)
@@ -642,4 +643,3 @@ class TransformerWrapper(nn.Module):
             return out, attn_maps
 
         return out
-

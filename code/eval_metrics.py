@@ -1,13 +1,15 @@
 from os import get_inheritable
+
 import numpy as np
-from skimage.metrics import structural_similarity as ssim
-from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
-from torchmetrics.image.fid import FrechetInceptionDistance
-from torchvision.models import ViT_H_14_Weights, vit_h_14
 import torch
 from einops import rearrange
-from torchmetrics.functional import accuracy
 from PIL import Image
+from skimage.metrics import structural_similarity as ssim
+from torchmetrics.functional import accuracy
+from torchmetrics.image.fid import FrechetInceptionDistance
+from torchmetrics.image.lpip import LearnedPerceptualImagePatchSimilarity
+from torchvision.models import ViT_H_14_Weights, vit_h_14
+
 
 def larger_the_better(gt, comp):
     return gt > comp
@@ -53,7 +55,7 @@ class fid_wrapper:
         self.fid.reset()
         self.fid.update(torch.tensor(rearrange(gt_imgs, 'n w h c -> n c w h')), real=True)
         self.fid.update(torch.tensor(rearrange(pred_imgs, 'n w h c -> n c w h')), real=False)
-        return self.fid.compute().item() 
+        return self.fid.compute().item()
 
 def pair_wise_score(pred_imgs, gt_imgs, metric, is_sucess):
     # pred_imgs: n, w, h, 3
@@ -100,7 +102,7 @@ def n_way_scores(pred_imgs, gt_imgs, metric, is_sucess, n=2, n_trials=100):
                 if is_sucess(gt_score, comp_score):
                     count += 1
             if count == len(n_imgs):
-                correct_count += 1 
+                correct_count += 1
         corrects.append(correct_count / n_trials)
     return corrects
 
@@ -116,7 +118,7 @@ def n_way_top_k_acc(pred, class_id, n_way, num_trials=40, top_k=1):
     for t in range(num_trials):
         idxs_picked = np.random.choice(pick_range, n_way-1, replace=False)
         pred_picked = torch.cat([pred[class_id].unsqueeze(0), pred[idxs_picked]])
-        acc = accuracy(pred_picked.unsqueeze(0), torch.tensor([0], device=pred.device), 
+        acc = accuracy(pred_picked.unsqueeze(0), torch.tensor([0], device=pred.device),
                     top_k=top_k)
         acc_list.append(acc.item())
     return np.mean(acc_list), np.std(acc_list)
@@ -128,7 +130,7 @@ def get_n_way_top_k_acc(pred_imgs, ground_truth, n_way, num_trials, top_k, devic
     preprocess = weights.transforms()
     model = model.to(device)
     model = model.eval()
-    
+
     acc_list = []
     std_list = []
     for pred, gt in zip(pred_imgs, ground_truth):
@@ -140,7 +142,7 @@ def get_n_way_top_k_acc(pred_imgs, ground_truth, n_way, num_trials, top_k, devic
         acc, std = n_way_top_k_acc(pred_out, gt_class_id, n_way, num_trials, top_k)
         acc_list.append(acc)
         std_list.append(std)
-       
+
     if return_std:
         return acc_list, std_list
     return acc_list
@@ -156,7 +158,7 @@ def get_similarity_metric(img1, img2, method='pair-wise', metric_name='mse', **k
         img2 = rearrange(img2, 'n c w h -> n w h c')
 
     if method == 'pair-wise':
-        eval_procedure_func = pair_wise_score 
+        eval_procedure_func = pair_wise_score
     elif method == 'n-way':
         eval_procedure_func = n_way_scores
     elif method == 'metrics-only':
@@ -183,5 +185,5 @@ def get_similarity_metric(img1, img2, method='pair-wise', metric_name='mse', **k
         decision_func = smaller_the_better
     else:
         raise NotImplementedError
-    
+
     return eval_procedure_func(img1, img2, metric_func, decision_func, **kwargs)

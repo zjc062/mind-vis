@@ -1,18 +1,22 @@
-import torch
-import pytorch_lightning as pl
-import torch.nn.functional as F
 from contextlib import contextmanager
+
 import numpy as np
+import pytorch_lightning as pl
+import torch
 # from taming.modules.vqvae.quantize import VectorQuantizer2 as VectorQuantizer
-import torch.nn as nn
-from dc_ldm.modules.diffusionmodules.model import Encoder, Decoder
-from dc_ldm.modules.distributions.distributions import DiagonalGaussianDistribution
+from torch import nn
+import torch.nn.functional as F
+from torch import einsum
+from torch.optim.lr_scheduler import LambdaLR
+from dc_ldm.modules.diffusionmodules.model import Decoder, Encoder
+from dc_ldm.modules.distributions.distributions import \
+    DiagonalGaussianDistribution
 from dc_ldm.modules.ema import LitEma
 from dc_ldm.util import instantiate_from_config
-from packaging import version
-from torch.optim.lr_scheduler import LambdaLR
-from torch import einsum
 from einops import rearrange
+from packaging import version
+
+
 
 class VectorQuantizer(nn.Module):
     """
@@ -369,7 +373,8 @@ class VQModel(pl.LightningModule):
         if plot_ema:
             with self.ema_scope():
                 xrec_ema, _ = self(x)
-                if x.shape[1] > 3: xrec_ema = self.to_rgb(xrec_ema)
+                if x.shape[1] > 3:
+                    xrec_ema = self.to_rgb(xrec_ema)
                 log["reconstructions_ema"] = xrec_ema
         return log
 
@@ -402,7 +407,7 @@ class VQModelInterface(VQModel):
         dec = self.decoder(quant)
         return dec
 
-    
+
 class AutoencoderKL(pl.LightningModule):
     def __init__(self,
                  ddconfig,
@@ -431,7 +436,7 @@ class AutoencoderKL(pl.LightningModule):
         if ckpt_path is not None:
             self.init_from_ckpt(ckpt_path, ignore_keys=ignore_keys)
         self.trainable = False
-        
+
     def init_from_ckpt(self, path, ignore_keys=list()):
         sd = torch.load(path, map_location="cpu")["state_dict"]
         keys = list(sd.keys())
