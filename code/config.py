@@ -62,7 +62,7 @@ class Config_MBM_finetune(Config_MBM_finetune):
 
         self.include_nonavg_test = True
         self.kam_subs = ['sbj_3']
-        self.bold5000_subs = ['CSI4']
+        self.bold5000_subs = ['CSI1']
 
         # Training Parameters
         self.lr = 5.3e-5
@@ -95,7 +95,7 @@ class Config_Generative_Model:
         
         self.dataset = 'GOD' # GOD or BOLD5000
         self.kam_subs = ['sbj_3']
-        self.bold5000_subs = ['CSI4']
+        self.bold5000_subs = ['CSI1']
         self.pretrain_mbm_path = os.path.join(self.root_path, f'pretrains/{self.dataset}/fmri_encoder.pth') 
 
         self.img_size = 256

@@ -3,6 +3,10 @@
 <img src=assets/first_fig.png />
 </p>
 
+## News
+- Mar. 1, 2023. Our paper is accpeted at CVPR2023!
+- Nov. 10, 2022. Project release.
+
 ## MinD-Vis
 **MinD-Vis** is a framework for decoding human visual stimuli from brain recording.
 This document introduces the precesedures required for replicating the results in *Seeing Beyond the Brain: Masked Modeling Conditioned Diffusion Model for Human Vision Decoding*
@@ -104,9 +108,9 @@ conda activate mind-vis
 ```
 
 ## Download data and checkpoints
-Due to size limi and license issue, the full fMRI pre-training dataset (required to replicate **Stage A**) needs to be downloaded from the [Human Connectome Projects (HCP)](https://db.humanconnectome.org/data/projects/HCP_1200) offical website. The pre-processing scripts are also included in this repo. 
+Due to size limit and license issue, the full fMRI pre-training dataset (required to replicate **Stage A**) needs to be downloaded from the [Human Connectome Projects (HCP)](https://db.humanconnectome.org/data/projects/HCP_1200) offical website. The pre-processing scripts are also included in this repo. 
 
-We also provide checkpoints and finetuning data at [FigShare](https://figshare.com/s/94cd778e6afafb00946e) to run the finetuing and decoding directly. Due to the size limit, we only release the checkpoints for Subject 3 and CSI4 in the GOD and BOLD5000 respectively. Checkpoints for other subjects are also available upon request. After downloading, extract the ```data/``` and ```pretrains/``` to the project directory. 
+We also provide checkpoints and finetuning data at [FigShare](https://figshare.com/s/94cd778e6afafb00946e) to run the finetuing and decoding directly. Due to the size limit, we only release the checkpoints for Subject 3 and CSI1 in the GOD and BOLD5000 respectively. Checkpoints for other subjects are also available upon request. After downloading, extract the ```data/``` and ```pretrains/``` to the project directory. 
 
 
 ## SC-MBM Pre-training on fMRI (Stage A)
@@ -170,3 +174,14 @@ python code/gen_eval.py --dataset GOD
 ## Acknowledgement
 We thank [Kamitani Lab](https://github.com/KamitaniLab), [
 Weizmann Vision Lab](https://github.com/WeizmannVision) and [BOLD5000 team](https://bold5000-dataset.github.io/website/) for making their raw and pre-processed data public. Our Masked Brain Modeling implementation is based on the [Masked Autoencoders](https://github.com/facebookresearch/mae) by Facebook Research. Our Conditional Latent Diffusion Model implementation is based on the [Latent Diffusion Model](https://github.com/CompVis/latent-diffusion) implementation from CompVis. We thank these authors for making their codes and checkpoints publicly available!
+
+## Citation
+```
+@InProceedings{Chen_2023_CVPR,
+    author    = {Chen, Zijiao and Qing, Jiaxin and Xiang, Tiange and Yue, Wan Lin and Zhou, Juan Helen},
+    title     = {Seeing Beyond the Brain: Masked Modeling Conditioned Diffusion Model for Human Vision Decoding},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    year      = {2023}
+}
+
+```
