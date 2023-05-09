@@ -196,7 +196,7 @@ def get_img_label(class_index:dict, img_filename:list, naive_label_set=None):
 def create_Kamitani_dataset(path='../data/Kamitani/npz',  roi='VC', patch_size=16, fmri_transform=identity,
             image_transform=identity, subjects = ['sbj_1', 'sbj_2', 'sbj_3', 'sbj_4', 'sbj_5'], 
             test_category=None, include_nonavg_test=False):
-    img_npz = dict(np.load(os.path.join(path, 'images_256.npz')))
+    img_npz = dict(np.load(os.path.join(path, 'images_500.npz')))
     with open(os.path.join(path, 'imagenet_class_index.json'), 'r') as f:
         img_class_index = json.load(f)
 

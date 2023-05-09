@@ -87,7 +87,7 @@ if __name__ == '__main__':
     config.root_path = root
     config.kam_path = os.path.join(root, 'data/Kamitani/npz')
     config.bold5000_path = os.path.join(root, 'data/BOLD5000')
-    config.pretrain_mbm_path = os.path.join(root, 'pretrains', f'{target}', 'fmri_encoder.pth')
+    config.pretrain_mae_path = os.path.join(root, 'pretrains', f'{target}', 'fmri_encoder.pth')
     config.pretrain_gm_path = os.path.join(root, 'pretrains/ldm/label2img')
     print(config.__dict__)
 
@@ -115,9 +115,9 @@ if __name__ == '__main__':
     num_voxels = dataset_test.num_voxels
     print(len(dataset_test))
     # prepare pretrained mae 
-    pretrain_mbm_metafile = torch.load(config.pretrain_mbm_path, map_location='cpu')
+    pretrain_mae_metafile = torch.load(config.pretrain_mae_path, map_location='cpu')
     # create generateive model
-    generative_model = fLDM(pretrain_mbm_metafile, num_voxels,
+    generative_model = fLDM(pretrain_mae_metafile, num_voxels,
                 device=device, pretrain_root=config.pretrain_gm_path, logger=config.logger,
                 ddim_steps=config.ddim_steps, global_pool=config.global_pool, use_time_cond=config.use_time_cond)
     generative_model.model.load_state_dict(sd['model_state_dict'])
