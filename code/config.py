@@ -53,12 +53,12 @@ class Config_MBM_finetune(Config_MBM_finetune):
     def __init__(self):
         
         # Project setting
-        self.root_path = '/mnt/isilon/CSC6/HelenZhouLab/HZLHD0/InternsnStudents/Interns/jonathan'
-        self.output_path = os.path.join(self.root_path, "mind-vis")
-        self.kam_path = os.path.join(self.root_path, "datasets/Kamitani/npz") 
-        self.bold5000_path = os.path.join(self.root_path, "datasets/BOLD5000")
+        self.root_path = '.'
+        self.output_path = self.root_path
+        self.kam_path = os.path.join(self.root_path, "data/Kamitani/npz") 
+        self.bold5000_path = os.path.join(self.root_path, "data/BOLD5000")
         self.dataset = 'GOD' # GOD  or BOLD5000
-        self.pretrain_mae_path = os.path.join(self.root_path, f'mind-vis/pretrains/{self.dataset}/fmri_encoder.pth') 
+        self.pretrain_mae_path = os.path.join(self.root_path, f'pretrains/{self.dataset}/fmri_encoder.pth') 
 
         self.include_nonavg_test = True
         self.kam_subs = ['sbj_3']
@@ -82,23 +82,23 @@ class Config_Generative_Model:
     def __init__(self):
         # project parameters
         self.seed = 2022
-        self.root_path = '/mnt/isilon/CSC6/HelenZhouLab/HZLHD0/InternsnStudents/Interns/jonathan'
-        self.output_path = os.path.join(self.root_path, "mind-vis")
+        self.root_path = '.'
+        self.output_path =  self.root_path
 
-        self.kam_path = os.path.join(self.root_path, "datasets/Kamitani/npz") 
-        self.bold5000_path = os.path.join(self.root_path, "datasets/BOLD5000")
+        self.kam_path = os.path.join(self.root_path, "data/Kamitani/npz") 
+        self.bold5000_path = os.path.join(self.root_path, "data/BOLD5000")
         self.roi = 'VC'
         self.patch_size = 16
 
         # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/semantic')
-        self.pretrain_gm_path = os.path.join(self.root_path, 'mind-vis/pretrains/ldm/label2img')
+        self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/label2img')
         # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/text2img-large')
         # self.pretrain_gm_path = os.path.join(self.root_path, 'pretrains/ldm/layout2img')
         
         self.dataset = 'GOD' # GOD or BOLD5000
         self.kam_subs = ['sbj_3']
         self.bold5000_subs = ['CSI1']
-        self.pretrain_mae_path = os.path.join(self.root_path, f'mind-vis/pretrains/{self.dataset}/fmri_encoder.pth') 
+        self.pretrain_mae_path = os.path.join(self.root_path, f'pretrains/{self.dataset}/fmri_encoder.pth') 
 
         self.img_size = 256
 
