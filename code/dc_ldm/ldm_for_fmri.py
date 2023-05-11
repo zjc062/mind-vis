@@ -95,6 +95,15 @@ class fLDM:
         test_loader = DataLoader(test_dataset, batch_size=len(test_dataset), shuffle=False)
         self.model.unfreeze_whole_model()
         self.model.freeze_first_stage()
+        # DEBUG: print data values for one batch
+        dataiter = iter(dataloader)
+        train_data = dataiter.next()
+        print(f"train_data fmri shape: {train_data['fmri'].shape}")
+        print(f"train_data image shape: {train_data['image'].shape}")
+        test_dataiter = iter(test_loader)
+        test_data = test_dataiter.next()
+        print(f"test_data fmri shape: {test_data['fmri'].shape}")
+        print(f"test_data image shape: {test_data['image'].shape}")
 
         self.model.learning_rate = lr1
         self.model.train_cond_stage_only = True
@@ -140,9 +149,12 @@ class fLDM:
                         break
                 latent = item['fmri']
                 gt_image = rearrange(item['image'], 'h w c -> 1 c h w') # h w c
+
                 print(f"rendering {num_samples} examples in {ddim_steps} steps.")
                 # assert latent.shape[-1] == self.fmri_latent_dim, 'dim error'
                 
+                print(f'gt_image shape: {gt_image.shape}')
+
                 c = model.get_learned_conditioning(repeat(latent, 'h w -> c h w', c=num_samples).to(self.device))
                 samples_ddim, _ = sampler.sample(S=ddim_steps, 
                                                 conditioning=c,
@@ -152,8 +164,18 @@ class fLDM:
 
                 x_samples_ddim = model.decode_first_stage(samples_ddim)
                 x_samples_ddim = torch.clamp((x_samples_ddim+1.0)/2.0, min=0.0, max=1.0)
+
+                # DEBUG
+                print(f"min value sample: ${np.min(x_samples_ddim)}")
+                print(f"max value sample: ${np.max(x_samples_ddim)}")                
+
+                print(f"x_samples_ddim shape: {x_samples_ddim.shape}")
                 gt_image = torch.clamp((gt_image+1.0)/2.0, min=0.0, max=1.0)
                 
+                # DEBUG
+                print(f"min value gt: ${np.min(gt_image)}")
+                print(f"max value gt: ${np.max(gt_image)}")
+
                 all_samples.append(torch.cat([gt_image, x_samples_ddim.detach().cpu()], dim=0)) # put groundtruth at first
                 
         

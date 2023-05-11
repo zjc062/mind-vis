@@ -13,7 +13,7 @@ import copy
 
 # own code
 from config import Config_Generative_Model
-from dataset import create_Kamitani_dataset, create_BOLD5000_dataset
+from dataset import create_Kamitani_dataset, create_BOLD5000_dataset, create_NSD_dataset
 from dc_ldm.ldm_for_fmri import fLDM
 from eval_metrics import get_similarity_metric
 
@@ -143,6 +143,11 @@ def main(config):
                 fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test], 
                 subjects=config.bold5000_subs)
         num_voxels = fmri_latents_dataset_train.num_voxels
+    elif config.dataset == 'NSD':
+        fmri_latents_dataset_train, fmri_latents_dataset_test = create_NSD_dataset(config.nsd_path, config.patch_size, 
+                fmri_transform=fmri_transform, image_transform=[img_transform_train, img_transform_test], 
+                subjects=config.nsd_subs)
+        num_voxels = fmri_latents_dataset_train.num_voxels
     else:
         raise NotImplementedError
 
@@ -233,7 +238,7 @@ if __name__ == '__main__':
         config.checkpoint_path = ckp
         print('Resuming from checkpoint: {}'.format(config.checkpoint_path))
 
-    output_path = os.path.join(config.output_path, 'results', 'generation',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
+    output_path = os.path.join(config.output_path, 'mind-vis','results', 'generation',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     config.output_path = output_path
     os.makedirs(output_path, exist_ok=True)
     

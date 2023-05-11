@@ -13,7 +13,7 @@ import copy
 
 # own code
 from config import Config_MBM_finetune
-from dataset import create_Kamitani_dataset, create_BOLD5000_dataset
+from dataset import create_Kamitani_dataset, create_BOLD5000_dataset, create_NSD_dataset
 from sc_mbm.mae_for_fmri import MAEforFMRI
 from sc_mbm.trainer import train_one_epoch
 from sc_mbm.trainer import NativeScalerWithGradNormCount as NativeScaler
@@ -90,11 +90,10 @@ def main(config):
     if torch.cuda.device_count() > 1:
         torch.cuda.set_device(config.local_rank) 
         torch.distributed.init_process_group(backend='nccl')
-    sd = torch.load(config.pretrain_mbm_path, map_location='cpu')
+    sd = torch.load(config.pretrain_mae_path, map_location='cpu')
     config_pretrain = sd['config']
     
-    output_path = os.path.join(config.root_path, 'results', 'fmri_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
-    # output_path = os.path.join(config.root_path, 'results', 'fmri_finetune')
+    output_path = os.path.join(config.root_path, 'mind-vis','results', 'fmri_finetune',  '%s'%(datetime.datetime.now().strftime("%d-%m-%Y-%H-%M-%S")))
     config.output_path = output_path
     logger = wandb_logger(config) if config.local_rank == 0 else None
     
@@ -124,6 +123,9 @@ def main(config):
     elif config.dataset == 'BOLD5000':
         _, test_set = create_BOLD5000_dataset(path=config.bold5000_path, patch_size=config_pretrain.patch_size, 
                 fmri_transform=torch.FloatTensor, subjects=config.bold5000_subs, include_nonavg_test=config.include_nonavg_test)
+    elif config.dataset == 'NSD':
+        _, test_set = create_NSD_dataset(path=config.nsd_path, patch_size=config_pretrain.patch_size, 
+                fmri_transform=torch.FloatTensor, subjects=config.nsd_subs, include_nonavg_test=config.include_nonavg_test)
     else:
         raise NotImplementedError
 
