@@ -4,6 +4,8 @@
 </p>
 
 ## News
+- May 20, 2023. Our extension work, video reconstruction from brain activity, are released. See this [repo](https://github.com/jqin4749/MindVideo/) 
+- Mar. 28, 2023. Our work are covered by NBC News! [Youtube](https://www.youtube.com/watch?v=TYbRNQ3LxwU) | [Website](https://www.nbcnews.com/tech/tech-news/brain-waves-ai-can-sketch-picturing-rcna76096)
 - Mar. 1, 2023. Our paper is accpeted at CVPR2023!
 - Nov. 10, 2022. Project release.
 
