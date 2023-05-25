@@ -8,6 +8,7 @@ import json
 import csv
 import torch
 from pathlib import Path
+from PIL import Image
 import torchvision.transforms as transforms
 
 def identity(x):
@@ -196,7 +197,7 @@ def get_img_label(class_index:dict, img_filename:list, naive_label_set=None):
 def create_Kamitani_dataset(path='../data/Kamitani/npz',  roi='VC', patch_size=16, fmri_transform=identity,
             image_transform=identity, subjects = ['sbj_1', 'sbj_2', 'sbj_3', 'sbj_4', 'sbj_5'], 
             test_category=None, include_nonavg_test=False):
-    img_npz = dict(np.load(os.path.join(path, 'images_256.npz')))
+    img_npz = dict(np.load(os.path.join(path, 'images_500.npz')))
     with open(os.path.join(path, 'imagenet_class_index.json'), 'r') as f:
         img_class_index = json.load(f)
 
@@ -469,4 +470,111 @@ class BOLD5000_dataset(Dataset):
     
     def switch_sub_view(self, sub, subs):
         # Not implemented
+        pass
+
+def create_NSD_dataset(path='../data/NSD', patch_size=16, fmri_transform=identity,
+        image_transform=identity, 
+        subjects = ['subj01', 'subj02', 'subj03', 'subj04', 'subj05', 'subj06', 'subj07', 'subj08'],
+        include_nonavg_test=False):
+    
+    roi_classes = ['prf-visualrois', 'floc-bodies', 'floc-faces', 'floc-places', 'floc-words', 'streams']
+    
+    fmri_train = []
+    fmri_test = []
+    img_train = []
+    img_test = []
+
+    for sub in subjects:
+        # load fmri data for each subject
+        fmri_dir = os.path.join(path, sub, 'training_split', 'training_fmri')
+        lh_fmri = np.load(os.path.join(fmri_dir, 'lh_training_fmri.npy'))
+        rh_fmri = np.load(os.path.join(fmri_dir, 'rh_training_fmri.npy'))
+        # concatenate both hemispheres
+        fmri_sub = np.concatenate((lh_fmri, rh_fmri), axis=1)
+        del lh_fmri, rh_fmri
+        fmri_sub = normalize(pad_to_patch_size(fmri_sub, patch_size))
+
+        # load image for each subject
+        img_dir = os.path.join(path, sub, 'training_split', 'training_images')
+        img_list = os.listdir(img_dir)
+        img_list.sort()
+
+        # Split training and test datasets
+        # Calculate how many stimulus images correspond to 90% of the training data
+        num_train = int(np.round(len(img_list) / 100 * 90))
+        # Shuffle all training stimulus images
+        idxs = np.arange(len(img_list))
+        np.random.shuffle(idxs)
+        # Assign 90% of the shuffled stimulus images to the training partition,
+        # and 10% to the test partition
+        idxs_train, idxs_test = idxs[:num_train], idxs[num_train:]
+
+        # Append subject datasets to global dataset
+        fmri_sub_train = fmri_sub[idxs_train]
+        fmri_sub_test = fmri_sub[idxs_test]
+        full_img_list = [os.path.join(img_dir, filename) for filename in img_list]
+        img_sub_train = np.array(full_img_list)[idxs_train]
+        img_sub_test = np.array(full_img_list)[idxs_test]
+
+        fmri_train.append(fmri_sub_train)
+        fmri_test.append(fmri_sub_test)
+        img_train.append(img_sub_train)
+        img_test.append(img_sub_test)
+
+        if include_nonavg_test:
+            fmri_train.append(fmri_sub_test)
+            img_train.append(img_sub_test)
+
+    fmri_train = np.concatenate(fmri_train, axis=0)
+    fmri_test = np.concatenate(fmri_test, axis=0)
+    img_train = np.concatenate(img_train, axis=0)
+    img_test = np.concatenate(img_test, axis=0)
+
+    full_image_transform = transforms.Compose([
+        # original size (425,425)
+        transforms.Resize((256,256)), # resize the images to 256x256 pixels
+        transforms.ToTensor() # convert the images to a PyTorch tensor
+        # transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]), # normalize the images color channels
+    ])
+
+    if isinstance(image_transform, list):
+        full_image_transform = transforms.Compose([
+            full_image_transform,
+            image_transform[0],
+            image_transform[1],
+        ])
+    else:
+        full_image_transform = transforms.Compose([
+            full_image_transform,
+            image_transform,
+        ])
+    
+    return (NSD_dataset(fmri_train, img_train, fmri_transform, full_image_transform), 
+            NSD_dataset(fmri_test, img_test, torch.FloatTensor, full_image_transform))
+
+class NSD_dataset(Dataset):
+    def __init__(self, fmri, img_paths, fmri_transform=identity, image_transform=identity):
+        self.fmri = fmri
+        self.img_paths = img_paths
+        self.fmri_transform = fmri_transform
+        self.image_transform = image_transform
+        self.num_voxels = self.fmri.shape[-1]
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+    def __len__(self):
+        return len(self.fmri)
+    
+    def __getitem__(self, index):
+        # Load the image
+        img_path = self.img_paths[index]
+        img = Image.open(img_path).convert('RGB')
+        tensor_img = self.image_transform(img) # dimensions (256,256,3)
+
+        # Load the fMRI
+        fmri = self.fmri[index]
+        fmri = np.expand_dims(fmri, axis=0) # dimensions (1, num_voxels)
+
+        return {'fmri' : self.fmri_transform(fmri), 'image': tensor_img}
+    
+    def switch_sub_view(self, sub, subs):
         pass
